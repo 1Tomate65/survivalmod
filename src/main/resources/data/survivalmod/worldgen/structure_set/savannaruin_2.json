@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "survivalmod:savannaruin_2",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 35,
+    "separation": 20,
+    "salt": 1101398598
+  }
+}

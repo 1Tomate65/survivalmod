@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "survivalmod:desserttreasure",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 200,
+    "separation": 20,
+    "salt": 922958840
+  }
+}

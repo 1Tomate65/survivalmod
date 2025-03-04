@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "survivalmod:sunflowerdecoration_1",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 25,
+    "separation": 3,
+    "salt": 77990164
+  }
+}

@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "survivalmod",
+	"version": "${version}",
+	"name": "survivalmod",
+	"description": "Add Commands and Rules to your fabric 1.21.4 world with this mod",
+	"authors": [
+		"Tomate65"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/survivalmod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"de.tomate65.survivalmod.Survivalmod"
+		]
+	},
+	"mixins": [
+		"survivalmod.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.9",
+		"minecraft": "~1.21.4",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "G": [
+      "minecraft:glass_pane"
+    ],
+    "I": [
+      "minecraft:glow_item_frame"
+    ]
+  },
+  "pattern": [
+    "GGG",
+    "GIG",
+    "GGG"
+  ],
+  "result": {
+    "id": "minecraft:glow_item_frame",
+    "components": {
+      "minecraft:custom_name": "\"Invisible Glow Item Frame\"",
+      "minecraft:item_name": "\"Invisible Glow Item Frame\"",
+      "minecraft:rarity": "rare",
+      "minecraft:entity_data": "{id:\"minecraft:glow_item_frame\",Invisible:1b}"
+    },
+    "count": 1
+  },
+  "show_notification": false
+}
