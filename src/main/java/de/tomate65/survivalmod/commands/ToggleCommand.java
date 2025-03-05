@@ -1,4 +1,4 @@
-/*package de.tomate65.survivalmod.commands;
+package de.tomate65.survivalmod.commands;
 
 import com.google.gson.*;
 import com.mojang.brigadier.CommandDispatcher;
@@ -97,4 +97,4 @@ public class ToggleCommand {
 
         return 1;
     }
-}*/
+}

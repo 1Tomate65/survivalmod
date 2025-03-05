@@ -12,7 +12,7 @@ import java.io.IOException;
 public class ConfigGenerator {
     private static final File CONFIG_DIR = new File("config/survival");
     private static final File SURVIVAL_CONFIG = new File(CONFIG_DIR, "conf.json");
-    //private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
+    private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void generateConfigs() {
@@ -71,7 +71,7 @@ public class ConfigGenerator {
         }
     }
 
-    /*private static void generateToggleConfig() {
+    private static void generateToggleConfig() {
         if (!TOGGLE_CONFIG.exists()) {
             try (FileWriter writer = new FileWriter(TOGGLE_CONFIG)) {
                 JsonObject toggleJson = new JsonObject();
@@ -92,5 +92,5 @@ public class ConfigGenerator {
                 e.printStackTrace();
             }
         }
-    }*/
+    }
 }
