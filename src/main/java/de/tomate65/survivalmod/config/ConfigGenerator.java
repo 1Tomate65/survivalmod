@@ -25,7 +25,7 @@ public class ConfigGenerator {
         }
 
         generateSurvivalConfig();
-        //generateToggleConfig();
+        generateToggleConfig();
     }
 
     private static void generateSurvivalConfig() {
@@ -37,31 +37,25 @@ public class ConfigGenerator {
                 JsonArray rules = new JsonArray();
                 JsonArray info = new JsonArray();
 
-                // Rules as a JSON-Array adden
                 rules.add("No griefing");
                 rules.add("Be respectful");
                 rules.add("Do not cheat");
 
-                // Info as a JSON-Array adden
-                info.add("This mod adds 23 new structures");
+                info.add("This mod adds 24 new structures");
                 info.add("This mod was originally created for a private Minecraft server");
                 info.add("I hope it is easy to understand and configure this config file");
                 info.add("");
                 info.add("Feel free to make suggestions or complain about bugs,");
                 info.add("But updates may take a while");
 
-                // join "rules" and "info" as JSON-Array together
                 survival.add("info", info);
                 survival.add("rules", rules);
 
-                // Structure build
                 commands.add("survival", survival);
                 survivalJson.add("commands", commands);
 
-                // Debug: Output JSON Structure
                 String jsonString = GSON.toJson(survivalJson);
 
-                // Write JSON to the file
                 writer.write(jsonString);
                 System.out.println("Successfully wrote to " + SURVIVAL_CONFIG.getAbsolutePath());
             } catch (IOException e) {
@@ -77,14 +71,12 @@ public class ConfigGenerator {
                 JsonObject toggleJson = new JsonObject();
                 JsonArray defaultToggles = new JsonArray();
 
-                // Default values for the toggle system as an array
                 defaultToggles.add("stone");
 
-                toggleJson.add("toggles", defaultToggles); // Inserting an array into the configuration
-                // Debug: JSON-Struktur Output JSON Structure
+                toggleJson.add("toggles", defaultToggles);
                 String jsonString = GSON.toJson(toggleJson);
 
-                // Write JSON to the file
+
                 writer.write(jsonString);
                 System.out.println("Successfully wrote to " + TOGGLE_CONFIG.getAbsolutePath());
             } catch (IOException e) {

@@ -34,7 +34,6 @@ public class ToggleCommand {
                         .then(literal("stone").executes(context -> toggleTag(context, "stone")))
         );
 
-        // Dynamisch weitere Toggles aus der Config hinzufügen
         for (String toggle : availableToggles) {
             dispatcher.register(
                     literal("toggle")
@@ -61,12 +60,12 @@ public class ToggleCommand {
         }
     }
 
-    private static void createDefaultConfig() {
+    public static void createDefaultConfig() {
         try {
             CONFIG_FILE.getParentFile().mkdirs();
             JsonObject config = new JsonObject();
             JsonArray defaultToggles = new JsonArray();
-            defaultToggles.add("stone");  // Standardmäßig wird "stone" als Toggle hinzugefügt
+            defaultToggles.add("stone");
             config.add("toggles", defaultToggles);
 
             try (FileWriter writer = new FileWriter(CONFIG_FILE)) {

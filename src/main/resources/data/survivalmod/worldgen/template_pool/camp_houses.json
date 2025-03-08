@@ -1,0 +1,182 @@
+{
+  "name": "survivalmod:camp_houses",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_black",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_blue",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_brown",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_cyan",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_gray",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_green",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_lightblue",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_lightgray",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_lime",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_magenta",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_orange",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_pink",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_purple",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_red",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_white",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_house_purple",
+        "projection": "rigid",
+        "processors": {
+          "processors": []
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "name": "survivalmod:camp_pathway",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_path_4corner",
+        "projection": "terrain_matching",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_path_end",
+        "projection": "terrain_matching",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 2,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_path_straight_1",
+        "projection": "terrain_matching",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 2,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_path_straight_2",
+        "projection": "terrain_matching",
+        "processors": {
+          "processors": []
+        }
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "survivalmod:camp_path_t",
+        "projection": "terrain_matching",
+        "processors": {
+          "processors": []
+        }
+      }
+    }
+  ]
+}

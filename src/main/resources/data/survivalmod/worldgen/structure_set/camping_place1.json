@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "survivalmod:camping_place1",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 35,
+    "separation": 20,
+    "salt": 130934985
+  }
+}

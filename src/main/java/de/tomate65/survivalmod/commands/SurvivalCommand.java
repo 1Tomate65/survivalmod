@@ -25,26 +25,22 @@ public class SurvivalCommand {
     private static Map<String, List<String>> subcommands = new HashMap<>();
 
     public static void register() {
-        // Load configuration at startup
         loadConfig();
 
-        // Register the command
         CommandRegistrationCallback.EVENT.register((dispatcher, dispatcher2, dispatcher3) -> registerCommands(dispatcher));
     }
 
     private static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
-        // Main command /survival
         dispatcher.register(
                 literal("survival")
                         .then(literal("reload").executes(context -> {
                             loadConfig();
-                            context.getSource().sendFeedback(() -> Text.literal("Configuration reloaded."), false);
+                            context.getSource().sendFeedback(() -> Text.literal("§7Configuration reloaded."), false);
                             return 1;
                         }))
                         .executes(SurvivalCommand::listAvailableCommands)
         );
 
-        // Dynamically register subcommands from config
         for (String subcommand : subcommands.keySet()) {
             dispatcher.register(
                     literal("survival")
@@ -55,7 +51,7 @@ public class SurvivalCommand {
 
     private static void loadConfig() {
         if (!CONFIG_FILE.exists()) {
-            System.err.println("Configuration file does not exist: " + CONFIG_FILE.getPath());
+            System.err.println("§cConfiguration file does not exist: " + CONFIG_FILE.getPath());
             return;
         }
 
