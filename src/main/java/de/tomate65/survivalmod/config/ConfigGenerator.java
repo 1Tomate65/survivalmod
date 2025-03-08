@@ -25,7 +25,7 @@ public class ConfigGenerator {
         }
 
         generateSurvivalConfig();
-        generateToggleConfig();
+        //generateToggleConfig();
     }
 
     private static void generateSurvivalConfig() {
@@ -46,7 +46,8 @@ public class ConfigGenerator {
                 info.add("I hope it is easy to understand and configure this config file");
                 info.add("");
                 info.add("Feel free to make suggestions or complain about bugs,");
-                info.add("But updates may take a while");
+                info.add("");
+                info.add("This is the mod Version b");
 
                 survival.add("info", info);
                 survival.add("rules", rules);
