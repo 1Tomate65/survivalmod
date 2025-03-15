@@ -65,7 +65,7 @@ public class ConfigGenerator {
 
                 survival.add("rules", rules);
                 survival.add("info", info);
-                survival.add("changelog", info);
+                survival.add("changelog", changelog);
 
                 commands.add("survival", survival);
                 survivalJson.add("commands", commands);
