@@ -48,6 +48,12 @@ public class ConfigGenerator {
                 info.add("Feel free to make suggestions or complain about bugs,");
                 info.add("");
                 info.add("This is the mod Version b");
+                info.add("");
+                info.add("§6§nFeatures in Progress");
+                info.add("§8- §r/toggle");
+                info.add("§8 - §rits unusable for an unoped player");
+                info.add("§8- §rRecipes per config file");
+                info.add("§8 - §rDoesn't work currently");
 
                 survival.add("info", info);
                 survival.add("rules", rules);
