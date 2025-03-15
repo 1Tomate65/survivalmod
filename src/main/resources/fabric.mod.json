@@ -3,13 +3,13 @@
 	"id": "survivalmod",
 	"version": "${version}",
 	"name": "survivalmod",
-	"description": "Add Commands and Rules to your fabric 1.21.4 world with this mod",
+	"description": "Add small additions into the game\nFor example Recipes and Structures",
 	"authors": [
-		"Tomate65"
+		"Tomate65",
+		"This_Pluto"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/1Tomate65/survivalmod"
 	},
 	"license": "MIT",
 	"icon": "assets/survivalmod/icon.png",

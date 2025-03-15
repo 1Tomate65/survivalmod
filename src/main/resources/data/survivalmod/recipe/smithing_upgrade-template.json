@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "base": [
+    "minecraft:netherite_upgrade_smithing_template"
+  ],
+  "addition": [
+    "minecraft:netherite_ingot"
+  ],
+  "template": [
+    "minecraft:netherite_upgrade_smithing_template"
+  ],
+  "result": {
+    "id": "minecraft:netherite_upgrade_smithing_template",
+    "count": 3
+  }
+}

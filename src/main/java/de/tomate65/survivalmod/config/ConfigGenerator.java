@@ -12,7 +12,7 @@ import java.io.IOException;
 public class ConfigGenerator {
     private static final File CONFIG_DIR = new File("config/survival");
     private static final File SURVIVAL_CONFIG = new File(CONFIG_DIR, "conf.json");
-    private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
+    //private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void generateConfigs() {
@@ -41,19 +41,20 @@ public class ConfigGenerator {
                 rules.add("Be respectful");
                 rules.add("Do not cheat");
 
-                info.add("This mod adds 24 new structures");
+                info.add("This mod has a default of 24 new structures");
+                info.add("This mod has a default of 50 new recipes");
                 info.add("This mod was originally created for a private Minecraft server");
                 info.add("I hope it is easy to understand and configure this config file");
                 info.add("");
                 info.add("Feel free to make suggestions or complain about bugs,");
                 info.add("");
-                info.add("This is the mod Version b");
+                info.add("This is the mod Version a");
                 info.add("");
                 info.add("§6§nFeatures in Progress");
                 info.add("§8- §r/toggle");
-                info.add("§8 - §rits unusable for an unoped player");
+                info.add("§7 - §rits unusable for an unoped player");
                 info.add("§8- §rRecipes per config file");
-                info.add("§8 - §rDoesn't work currently");
+                info.add("§7 - §rDoesn't work currently");
 
                 survival.add("info", info);
                 survival.add("rules", rules);
@@ -72,7 +73,7 @@ public class ConfigGenerator {
         }
     }
 
-    private static void generateToggleConfig() {
+    /*private static void generateToggleConfig() {
         if (!TOGGLE_CONFIG.exists()) {
             try (FileWriter writer = new FileWriter(TOGGLE_CONFIG)) {
                 JsonObject toggleJson = new JsonObject();
@@ -91,5 +92,5 @@ public class ConfigGenerator {
                 e.printStackTrace();
             }
         }
-    }
+    }*/
 }
