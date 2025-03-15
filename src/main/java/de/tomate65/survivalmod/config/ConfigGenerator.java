@@ -36,6 +36,7 @@ public class ConfigGenerator {
                 JsonObject survival = new JsonObject();
                 JsonArray rules = new JsonArray();
                 JsonArray info = new JsonArray();
+                JsonArray changelog = new JsonArray();
 
                 rules.add("No griefing");
                 rules.add("Be respectful");
@@ -56,8 +57,15 @@ public class ConfigGenerator {
                 info.add("§8- §rRecipes per config file");
                 info.add("§7 - §rDoesn't work currently");
 
-                survival.add("info", info);
+                changelog.add("§7§l§nChangelog");
+                changelog.add("");
+                changelog.add("Nothings changed it seems");
+                changelog.add("O' I know,");
+                changelog.add("They added the changelog in this update in this update");
+
                 survival.add("rules", rules);
+                survival.add("info", info);
+                survival.add("changelog", info);
 
                 commands.add("survival", survival);
                 survivalJson.add("commands", commands);

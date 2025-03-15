@@ -17,8 +17,8 @@
   "result": {
     "id": "minecraft:item_frame",
     "components": {
-      "minecraft:custom_name": "\"Invisible Glow Item Frame\"",
-      "minecraft:item_name": "\"Invisible Glow Item Frame\"",
+      "minecraft:custom_name": "\"Invisible Item Frame\"",
+      "minecraft:item_name": "\"Invisible Item Frame\"",
       "minecraft:rarity": "rare",
       "minecraft:entity_data": "{id:\"minecraft:item_frame\",Invisible:1b}"
     },
