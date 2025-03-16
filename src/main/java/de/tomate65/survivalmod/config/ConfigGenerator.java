@@ -13,7 +13,7 @@ public class ConfigGenerator {
     private static final File CONFIG_DIR = new File("config/survival");
     private static final File SURVIVAL_CONFIG = new File(CONFIG_DIR, "survival.json");
     private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
-    private static final File CONF_CONFIG = new File(CONFIG_DIR, "conf.json");
+    private static final File CONF_CONFIG = new File(CONFIG_DIR, "conf.json"); // Neue Konfigurationsdatei
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void generateConfigs() {
@@ -27,7 +27,7 @@ public class ConfigGenerator {
 
         generateSurvivalConfig();
         generateToggleConfig();
-        generateConfConfig();
+        generateConfConfig(); // Generiere die neue Konfigurationsdatei
     }
 
     private static void generateSurvivalConfig() {
@@ -94,7 +94,6 @@ public class ConfigGenerator {
                 toggleJson.add("toggles", defaultToggles);
                 String jsonString = GSON.toJson(toggleJson);
 
-
                 writer.write(jsonString);
                 System.out.println("Successfully wrote to " + TOGGLE_CONFIG.getAbsolutePath());
             } catch (IOException e) {
@@ -103,11 +102,14 @@ public class ConfigGenerator {
             }
         }
     }
+
+    // Neue Methode zur Generierung der conf.json
     private static void generateConfConfig() {
         if (!CONF_CONFIG.exists()) {
             try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
                 JsonObject confJson = new JsonObject();
 
+                // Beispielwerte für die Konfiguration
                 confJson.addProperty("Generate Recipes", true);
                 confJson.addProperty("Generate Structures", true);
                 confJson.addProperty("Number of crafts remain", -1);
