@@ -15,7 +15,7 @@ import java.util.Set;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class ToggleCommand {
-    /*private static final File CONFIG_FILE = new File("config/survival/toggle.json");
+    private static final File CONFIG_FILE = new File("config/survival/toggle.json");
     private static Set<String> availableToggles = new HashSet<>();
 
     public static void register() {
@@ -95,5 +95,5 @@ public class ToggleCommand {
         }
 
         return 1;
-    }*/
+    }
 }

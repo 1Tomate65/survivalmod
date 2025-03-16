@@ -11,8 +11,6 @@ import net.minecraft.recipe.RecipeSerializer;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -81,14 +79,14 @@ public class UniversalRecipeLoader {
         String type = recipeJson.get("type").getAsString();
 
         // Finde den entsprechenden Rezept-Serializer
-        RecipeSerializer<?> serializer = Registries.RECIPE_SERIALIZER.get(new Identifier(type));
+        RecipeSerializer<?> serializer = Registries.RECIPE_SERIALIZER.get(Identifier.of(type.contains(":") ? type : "minecraft", type));
         if (serializer == null) {
             System.err.println("Unknown recipe type: " + type);
             return;
         }
 
         // Deserialisiere das Rezept
-        Recipe<?> recipe = serializer.read(new Identifier("survivalmod", "custom_recipe_" + recipeJson.hashCode()), recipeJson);
+        Recipe<?> recipe = serializer.loadfromconfigfile(Identifier.of("survivalmod", "customrecipe" + Math.abs(recipeJson.hashCode())), recipeJson);
         if (recipe == null) {
             System.err.println("Failed to deserialize recipe: " + recipeJson);
             return;
@@ -97,6 +95,6 @@ public class UniversalRecipeLoader {
         // Füge das Rezept dem Rezept-Manager hinzu
         recipeManager.getStonecutterRecipes();
 
-        System.out.println("Successfully loaded recipe: " + recipe.getId());
-    }*/ //Viel spaß später noch :)
+        System.out.println("Successfully loaded recipe: " + recipe.getType().toString());
+    }*/ //Viel spaß später noch 🙂
 }

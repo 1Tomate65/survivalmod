@@ -21,7 +21,7 @@ import java.util.Map;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class SurvivalCommand {
-    private static final File CONFIG_FILE = new File("config/survival/conf.json");
+    private static final File CONFIG_FILE = new File("config/survival/survival.json");
     private static Map<String, List<String>> subcommands = new HashMap<>();
 
     public static void register() {

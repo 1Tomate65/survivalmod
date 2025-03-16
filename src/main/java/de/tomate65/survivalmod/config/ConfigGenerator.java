@@ -11,8 +11,9 @@ import java.io.IOException;
 
 public class ConfigGenerator {
     private static final File CONFIG_DIR = new File("config/survival");
-    private static final File SURVIVAL_CONFIG = new File(CONFIG_DIR, "conf.json");
-    //private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
+    private static final File SURVIVAL_CONFIG = new File(CONFIG_DIR, "survival.json");
+    private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
+    private static final File CONF_CONFIG = new File(CONFIG_DIR, "conf.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void generateConfigs() {
@@ -25,7 +26,8 @@ public class ConfigGenerator {
         }
 
         generateSurvivalConfig();
-        //generateToggleConfig();
+        generateToggleConfig();
+        generateConfConfig();
     }
 
     private static void generateSurvivalConfig() {
@@ -61,7 +63,7 @@ public class ConfigGenerator {
                 changelog.add("");
                 changelog.add("Nothings changed it seems");
                 changelog.add("O' I know,");
-                changelog.add("They added the changelog in this update in this update");
+                changelog.add("They added the changelog in this update");
 
                 survival.add("rules", rules);
                 survival.add("info", info);
@@ -81,7 +83,7 @@ public class ConfigGenerator {
         }
     }
 
-    /*private static void generateToggleConfig() {
+    private static void generateToggleConfig() {
         if (!TOGGLE_CONFIG.exists()) {
             try (FileWriter writer = new FileWriter(TOGGLE_CONFIG)) {
                 JsonObject toggleJson = new JsonObject();
@@ -100,5 +102,24 @@ public class ConfigGenerator {
                 e.printStackTrace();
             }
         }
-    }*/
+    }
+    private static void generateConfConfig() {
+        if (!CONF_CONFIG.exists()) {
+            try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
+                JsonObject confJson = new JsonObject();
+
+                confJson.addProperty("Generate Recipes", true);
+                confJson.addProperty("Generate Structures", true);
+                confJson.addProperty("Number of crafts remain", -1);
+
+                String jsonString = GSON.toJson(confJson);
+
+                writer.write(jsonString);
+                System.out.println("Successfully wrote to " + CONF_CONFIG.getAbsolutePath());
+            } catch (IOException e) {
+                System.err.println("Error writing to " + CONF_CONFIG.getAbsolutePath());
+                e.printStackTrace();
+            }
+        }
+    }
 }
