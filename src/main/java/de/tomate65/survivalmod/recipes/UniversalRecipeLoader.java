@@ -98,5 +98,5 @@ public class UniversalRecipeLoader {
         recipeManager.getStonecutterRecipes();
 
         System.out.println("Successfully loaded recipe: " + recipe.getType().toString());
-    } //Viel spaß später noch :)
+    } //Viel spaß später noch
 }
