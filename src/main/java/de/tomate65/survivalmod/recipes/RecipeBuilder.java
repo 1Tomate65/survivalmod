@@ -5,7 +5,8 @@ import java.util.Map;
 import static de.tomate65.survivalmod.recipes.RecipeGenerator.generateBlastingRecipe;
 
 public class RecipeBuilder {
-    public static void Recipe() {
+    public static void Recipe()
+        {
         String[][] pattern1 = { {"A", "A", "A"}, {"A", "B", "A"}, {"A", "A", "A"} };
         String[][] pattern2 = { {"A"}, {"B"} };
         String[][] pattern3 = { {"A"}, {"A"} };
@@ -109,6 +110,4 @@ public class RecipeBuilder {
         RecipeGenerator.generateSmithingRecipe("minecraft:netherite_upgrade_smithing_template", "minecraft:wayfinder_armor_trim_smithing_template", "minecraft:netherite_ingot", "minecraft:wayfinder_armor_trim_smithing_template", 2, "./smithing_recipe.json");
         RecipeGenerator.generateSmithingRecipe("minecraft:netherite_upgrade_smithing_template", "minecraft:wild_armor_trim_smithing_template", "minecraft:netherite_ingot", "minecraft:wild_armor_trim_smithing_template", 2, "./smithing_recipe.json");
     }
-
-
 }

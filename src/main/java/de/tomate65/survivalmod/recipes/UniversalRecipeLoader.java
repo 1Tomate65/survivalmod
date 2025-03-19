@@ -20,7 +20,7 @@ import java.io.IOException;
 
 public class UniversalRecipeLoader {
 
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    /*private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final File CONFIG_DIR = new File("config/survival");
     private static final File RECIPES_FILE = new File(CONFIG_DIR, "recipes.json");
 
@@ -98,5 +98,5 @@ public class UniversalRecipeLoader {
         recipeManager.getStonecutterRecipes();
 
         System.out.println("Successfully loaded recipe: " + recipe.getType().toString());
-    } //Viel spaß später noch
+    }*/ //Viel spaß später noch
 }
