@@ -11,6 +11,7 @@ import java.io.IOException;
 
 public class ConfigGenerator {
     private static final File CONFIG_DIR = new File("config/survival");
+    private static final File CONFIG_DIR_recipe = new File("config/survival/recipe");
     private static final File SURVIVAL_CONFIG = new File(CONFIG_DIR, "survival.json");
     private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
     private static final File CONF_CONFIG = new File(CONFIG_DIR, "conf.json"); // Neue Konfigurationsdatei
@@ -28,6 +29,15 @@ public class ConfigGenerator {
         generateSurvivalConfig();
         generateToggleConfig();
         generateConfConfig(); // Generiere die neue Konfigurationsdatei
+
+        if (!CONFIG_DIR_recipe.exists()) {
+            boolean dirsCreated = CONFIG_DIR_recipe.mkdirs();
+            if (!dirsCreated) {
+                System.err.println("Failed to create config directory: " + CONFIG_DIR_recipe.getAbsolutePath());
+                return;
+            }
+        }
+        // Here the recipe register
     }
 
     private static void generateSurvivalConfig() {
