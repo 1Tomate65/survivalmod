@@ -12,9 +12,11 @@ public class ConfigReader {
     private static final File SURVIVAL_CONFIG_FILE = new File("config/survival/survival.json");
     private static final File CONF_CONFIG_FILE = new File("config/survival/conf.json");
 
-    private static boolean generateRecipes;
-    private static boolean generateStructures;
-    //private static int numberOfCraftsRemain;
+    // Config fields with default values
+    private static boolean generateRecipes = false;
+    private static boolean generateStructures = false;
+    private static boolean toggleCommandEnabled = false;
+    private static String defaultStatCategory = "mined"; // Fallback if not in config
 
     public static void loadConfig() {
         if (!SURVIVAL_CONFIG_FILE.exists()) {
@@ -52,25 +54,47 @@ public class ConfigReader {
         try (FileReader reader = new FileReader(CONF_CONFIG_FILE)) {
             JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
 
-            generateRecipes = config.get("Generate Recipes").getAsBoolean();
-            generateStructures = config.get("Generate Structures").getAsBoolean();
-            //numberOfCraftsRemain = config.get("Number of crafts remain").getAsInt();
+            // Safely read values with fallbacks
+            generateRecipes = config.has("Generate Recipes")
+                    ? config.get("Generate Recipes").getAsBoolean()
+                    : false;
+
+            generateStructures = config.has("Generate Structures")
+                    ? config.get("Generate Structures").getAsBoolean()
+                    : false;
+
+            toggleCommandEnabled = config.has("Toggle Command")
+                    ? config.get("Toggle Command").getAsBoolean()
+                    : false;
+
+            defaultStatCategory = config.has("Default Statistik Category")
+                    ? config.get("Default Statistik Category").getAsString()
+                    : "mined";
 
             System.out.println("Generate Recipes: " + generateRecipes);
             System.out.println("Generate Structures: " + generateStructures);
-            //System.out.println("Number of crafts remain: " + numberOfCraftsRemain);
+            System.out.println("Toggle Command Enabled: " + toggleCommandEnabled);
+            System.out.println("Default Stat Category: " + defaultStatCategory);
 
         } catch (IOException e) {
             System.err.println("Error reading conf config file: " + e.getMessage());
         }
     }
+
+    // Getters
     public static boolean isGenerateRecipes() {
         return generateRecipes;
     }
+
     public static boolean isGenerateStructures() {
         return generateStructures;
     }
-    /*public static int getNumberOfCraftsRemain() {
-        return numberOfCraftsRemain;
-    }*/
+
+    public static boolean isToggleCommandEnabled() {
+        return toggleCommandEnabled;
+    }
+
+    public static String getDefaultStatCategory() {
+        return defaultStatCategory;
+    }
 }

@@ -93,7 +93,7 @@ public class ConfigGenerator {
         }
     }
 
-    private static void generateToggleConfig() {
+    public static void generateToggleConfig() {
         if (!TOGGLE_CONFIG.exists()) {
             try (FileWriter writer = new FileWriter(TOGGLE_CONFIG)) {
                 JsonObject toggleJson = new JsonObject();
@@ -113,16 +113,21 @@ public class ConfigGenerator {
         }
     }
 
-    // Neue Methode zur Generierung der conf.json
     private static void generateConfConfig() {
         if (!CONF_CONFIG.exists()) {
             try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
                 JsonObject confJson = new JsonObject();
 
-                // Beispielwerte für die Konfiguration
-                confJson.addProperty("Generate Recipes", true);
-                confJson.addProperty("Generate Structures", true);
+                // Example configuration values
+                confJson.addProperty("Generate Recipes", false);
+                confJson.addProperty("Generate Structures", false);
+                confJson.addProperty("Toggle Command", false);
                 confJson.addProperty("Number of crafts remain", -1);
+
+                // Add the commented commands as actual properties with comments as values
+                confJson.addProperty("#1", "Valid Default Statistics are:");
+                confJson.addProperty("#2", "mined, crafted, used, broken, picked_up, dropped, killed, killed_by, custom");
+                confJson.addProperty("Default Statistik Category", "mined");
 
                 String jsonString = GSON.toJson(confJson);
 

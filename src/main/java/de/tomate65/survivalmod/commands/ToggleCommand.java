@@ -3,6 +3,7 @@ package de.tomate65.survivalmod.commands;
 import com.google.gson.*;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import de.tomate65.survivalmod.config.ConfigGenerator;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -11,40 +12,27 @@ import net.minecraft.text.Text;
 import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class ToggleCommand {
     private static final File CONFIG_FILE = new File("config/survival/toggle.json");
+    private static final File MAIN_CONFIG_FILE = new File("config/survival/conf.json");
+    private static final File PLAYERDATA_DIR = new File("config/survival/playerdata");
     private static Set<String> availableToggles = new HashSet<>();
+    private static boolean isCommandEnabled = true;
+    private static String defaultStatCategory = "mined"; // Default fallback if not in config
 
-    public static void register() {
-        loadConfig();
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated, dedicated2) -> registerCommands(dispatcher));
-    }
-
-    private static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(
-                literal("toggle")
-                        .then(literal("reload").executes(context -> {
-                            loadConfig();
-                            context.getSource().sendFeedback(() -> Text.literal("Toggle configuration reloaded."), false);
-                            return 1;
-                        }))
-                        .then(literal("stone").executes(context -> toggleTag(context, "stone")))
-        );
-
-        for (String toggle : availableToggles) {
-            dispatcher.register(
-                    literal("toggle")
-                            .then(literal(toggle).executes(context -> toggleTag(context, toggle)))
-            );
-        }
-    }
+    // Minecraft statistic categories
+    private static final String[] STAT_CATEGORIES = {
+            "mined", "crafted", "used", "broken", "picked_up", "dropped",
+            "killed", "killed_by", "custom"
+    };
 
     static void loadConfig() {
         if (!CONFIG_FILE.exists()) {
-            createDefaultConfig();
+            ConfigGenerator.generateToggleConfig();  // Use the centralized config generator
         }
 
         try (FileReader reader = new FileReader(CONFIG_FILE)) {
@@ -55,29 +43,119 @@ public class ToggleCommand {
             for (int i = 0; i < toggles.size(); i++) {
                 availableToggles.add(toggles.get(i).getAsString());
             }
+            System.out.println("Loaded toggles: " + availableToggles);
         } catch (IOException | JsonParseException e) {
             System.err.println("Error reading toggle configuration: " + e.getMessage());
         }
     }
 
-    public static void createDefaultConfig() {
-        try {
-            CONFIG_FILE.getParentFile().mkdirs();
-            JsonObject config = new JsonObject();
-            JsonArray defaultToggles = new JsonArray();
-            defaultToggles.add("stone");
-            config.add("toggles", defaultToggles);
+    public static void register() {
+        // Load configs first
+        loadConfig();
+        loadMainConfig();
 
-            try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
-                new GsonBuilder().setPrettyPrinting().create().toJson(config, writer);
+        // Then register commands
+        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated, dedicated2) -> {
+            registerCommands(dispatcher);
+        });
+    }
+
+    private static void loadMainConfig() {
+        if (!MAIN_CONFIG_FILE.exists()) {
+            return;
+        }
+
+        try (FileReader reader = new FileReader(MAIN_CONFIG_FILE)) {
+            JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
+            if (config.has("Toggle Command")) {
+                isCommandEnabled = config.get("Toggle Command").getAsBoolean();
             }
-            System.out.println("Created default toggle configuration.");
-        } catch (IOException e) {
-            System.err.println("Error creating default toggle config: " + e.getMessage());
+            if (config.has("Default Statistik Category")) {
+                defaultStatCategory = config.get("Default Statistik Category").getAsString();
+            }
+        } catch (IOException | JsonParseException e) {
+            System.err.println("Error reading main configuration: " + e.getMessage());
         }
     }
 
-    private static int toggleTag(CommandContext<ServerCommandSource> context, String tag) {
+    private static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
+        // Base command with disabled check
+        dispatcher.register(
+                literal("toggle")
+                        .executes(context -> {
+                            if (!isCommandEnabled) {
+                                context.getSource().sendError(Text.literal("This Command is Disabled, please contact an admin if you think this is a mistake"));
+                                return 0;
+                            }
+                            context.getSource().sendFeedback(() -> Text.literal("Usage: /toggle <toggle> <location> [stat_category]"), false);
+                            return 1;
+                        })
+                        .then(literal("reload").executes(context -> {
+                            if (!isCommandEnabled) {
+                                context.getSource().sendError(Text.literal("This Command is Disabled, please contact an admin if you think this is a mistake"));
+                                return 0;
+                            }
+                            loadConfig();
+                            loadMainConfig();
+                            context.getSource().sendFeedback(() -> Text.literal("Toggle configuration reloaded."), false);
+                            return 1;
+                        }))
+                        .then(literal("reset").executes(context -> {
+                            if (!isCommandEnabled) {
+                                context.getSource().sendError(Text.literal("This Command is Disabled, please contact an admin if you think this is a mistake"));
+                                return 0;
+                            }
+                            return resetPlayerConfig(context);
+                        }))
+        );
+
+        // Register each toggle with location and optional stat category
+        for (String toggle : availableToggles) {
+            dispatcher.register(
+                    literal("toggle")
+                            .then(literal(toggle)
+                                    .then(literal("scoreboard")
+                                            .executes(context -> setToggleWithStats(context, toggle, "scoreboard", defaultStatCategory))
+                                            .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "mined")))
+                                            .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "crafted")))
+                                            .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "used")))
+                                            .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "broken")))
+                                            .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "picked_up")))
+                                            .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "dropped")))
+                                            .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "killed")))
+                                            .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "killed_by")))
+                                            .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "custom")))
+                                    )
+                                    .then(literal("actionbar")
+                                            .executes(context -> setToggleWithStats(context, toggle, "actionbar", defaultStatCategory))
+                                            .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "actionbar", "mined")))
+                                            .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "actionbar", "crafted")))
+                                            .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "actionbar", "used")))
+                                            .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "actionbar", "broken")))
+                                            .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "actionbar", "picked_up")))
+                                            .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "actionbar", "dropped")))
+                                            .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "actionbar", "killed")))
+                                            .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "actionbar", "killed_by")))
+                                            .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "actionbar", "custom")))
+                                    )
+                                    .then(literal("title")
+                                            .executes(context -> setToggleWithStats(context, toggle, "title", defaultStatCategory))
+                                            .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "title", "mined")))
+                                            .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "title", "crafted")))
+                                            .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "title", "used")))
+                                            .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "title", "broken")))
+                                            .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "title", "picked_up")))
+                                            .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "title", "dropped")))
+                                            .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "title", "killed")))
+                                            .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "title", "killed_by")))
+                                            .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "title", "custom")))
+                                    )
+                            )
+            );
+        }
+    }
+
+    private static int setToggleWithStats(CommandContext<ServerCommandSource> context, String toggle, String location, String statCategory) {
         ServerCommandSource source = context.getSource();
         if (!(source.getEntity() instanceof ServerPlayerEntity)) {
             source.sendError(Text.literal("This command can only be executed by a player."));
@@ -85,15 +163,117 @@ public class ToggleCommand {
         }
 
         ServerPlayerEntity player = (ServerPlayerEntity) source.getEntity();
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
 
-        if (player.getCommandTags().contains(tag)) {
-            player.removeCommandTag(tag);
-            context.getSource().sendFeedback(() -> Text.literal("§2Removed tag§7: §e" + tag), false);
-        } else {
-            player.addCommandTag(tag);
-            context.getSource().sendFeedback(() -> Text.literal("§aAdded tag§7: §e" + tag), false);
+        try {
+            PLAYERDATA_DIR.mkdirs();
+            JsonObject playerData = new JsonObject();
+
+            if (playerFile.exists()) {
+                try (FileReader reader = new FileReader(playerFile)) {
+                    playerData = JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+
+            // Check if identical settings already exist
+            if (playerData.has("toggle") && playerData.has("toggle_location") && playerData.has("stat_category")) {
+                String currentToggle = playerData.get("toggle").getAsString();
+                String currentLocation = playerData.get("toggle_location").getAsString();
+                String currentStat = playerData.get("stat_category").getAsString();
+
+                if (currentToggle.equals(toggle) && currentLocation.equals(location) && currentStat.equals(statCategory)) {
+                    context.getSource().sendFeedback(() -> Text.literal("§cYou already have these settings: " +
+                            toggle + " in " + location + " with " + statCategory + " stats"), false);
+                    return 0;
+                }
+            }
+
+            playerData.addProperty("uuid", playerId.toString());
+            playerData.addProperty("playername", player.getName().getString());
+            playerData.addProperty("toggle", toggle);
+            playerData.addProperty("toggle_location", location);
+            playerData.addProperty("stat_category", statCategory);
+
+            try (FileWriter writer = new FileWriter(playerFile)) {
+                new GsonBuilder().setPrettyPrinting().create().toJson(playerData, writer);
+            }
+
+            context.getSource().sendFeedback(() -> Text.literal("§aSet toggle §e" + toggle +
+                    " §ato display in §e" + location + " §awith §e" + statCategory + " §astatistics"), false);
+            return 1;
+        } catch (IOException | JsonParseException e) {
+            System.err.println("Error handling player toggle settings: " + e.getMessage());
+            context.getSource().sendError(Text.literal("Error saving your toggle preference."));
+            return 0;
+        }
+    }
+
+    private static int setStatCategory(CommandContext<ServerCommandSource> context, String category) {
+        ServerCommandSource source = context.getSource();
+        if (!(source.getEntity() instanceof ServerPlayerEntity)) {
+            source.sendError(Text.literal("This command can only be executed by a player."));
+            return 0;
         }
 
-        return 1;
+        ServerPlayerEntity player = (ServerPlayerEntity) source.getEntity();
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
+
+        try {
+            PLAYERDATA_DIR.mkdirs();
+            JsonObject playerData = new JsonObject();
+
+            if (playerFile.exists()) {
+                try (FileReader reader = new FileReader(playerFile)) {
+                    playerData = JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+
+            if (playerData.has("stat_category") && playerData.get("stat_category").getAsString().equals(category)) {
+                context.getSource().sendFeedback(() -> Text.literal("§cYou already have statistic category set to " + category), false);
+                return 0;
+            }
+
+            playerData.addProperty("uuid", playerId.toString());
+            playerData.addProperty("playername", player.getName().getString());
+            playerData.addProperty("stat_category", category);
+
+            try (FileWriter writer = new FileWriter(playerFile)) {
+                new GsonBuilder().setPrettyPrinting().create().toJson(playerData, writer);
+            }
+
+            context.getSource().sendFeedback(() -> Text.literal("§aSet statistic category to §e" + category), false);
+            return 1;
+        } catch (IOException | JsonParseException e) {
+            System.err.println("Error handling player statistic category: " + e.getMessage());
+            context.getSource().sendError(Text.literal("Error saving your statistic preference."));
+            return 0;
+        }
+    }
+
+    private static int resetPlayerConfig(CommandContext<ServerCommandSource> context) {
+        ServerCommandSource source = context.getSource();
+        if (!(source.getEntity() instanceof ServerPlayerEntity)) {
+            source.sendError(Text.literal("This command can only be executed by a player."));
+            return 0;
+        }
+
+        ServerPlayerEntity player = (ServerPlayerEntity) source.getEntity();
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
+
+        if (playerFile.exists()) {
+            if (playerFile.delete()) {
+                context.getSource().sendFeedback(() -> Text.literal("§aYour toggle preferences have been reset."), false);
+                return 1;
+            } else {
+                context.getSource().sendError(Text.literal("§cFailed to reset your toggle preferences."));
+                return 0;
+            }
+        } else {
+            context.getSource().sendFeedback(() -> Text.literal("§aYou didn't have any toggle preferences to reset."), false);
+            return 1;
+        }
     }
 }
