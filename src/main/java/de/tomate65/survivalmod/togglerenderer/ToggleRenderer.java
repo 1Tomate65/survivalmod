@@ -2,10 +2,18 @@ package de.tomate65.survivalmod.togglerenderer;
 
 public class ToggleRenderer {
 
-    //Here is the class for the toggle command that can be rendered ingame
-    //Idea/ Concept
-    //with /toggle (Item_ID) (location) you should be able to display your statistics in the >Scoreboard / Title / actionbar / bossbar<,
-    //how many of them you have already mined.
-    //Man It should preferably be saved in a separate file.
+// This class should do:
+    // Read from the files at *config/survival/playerdata/uuid.json
+    // Then it should look for sections called:
+    //      "toggle": "stone",
+    //      "toggle_location": "actionbar",
+    //      "stat_category": "used"
+    //
+    // after getting the data (for every player)
+    //it's going to show the Item in the Toggle_location the user chose with the category that is asignt to tehm.
+    //
+    //Let the codeing Begin.
+
+    //There should be code above this line ^---< but thers is none >_<
 
 }
