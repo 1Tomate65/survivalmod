@@ -37,7 +37,6 @@ public class ConfigGenerator {
                 return;
             }
         }
-        // Here the missing recipe register
     }
 
     private static void generateSurvivalConfig() {
@@ -80,6 +79,7 @@ public class ConfigGenerator {
                 changelog.add("§7§l§nChangelog");
                 changelog.add("");
                 changelog.add("§7-§r §aReworked §7/§2toggle");
+                changelog.add("§7-§r §aMade Toggle command Display colorble per Player");
 
                 survival.add("rules", rules);
                 survival.add("info", info);
@@ -89,7 +89,6 @@ public class ConfigGenerator {
                 survivalJson.add("commands", commands);
 
                 String jsonString = GSON.toJson(survivalJson);
-
                 writer.write(jsonString);
                 System.out.println("Successfully wrote to " + SURVIVAL_CONFIG.getAbsolutePath());
             } catch (IOException e) {
@@ -131,13 +130,17 @@ public class ConfigGenerator {
                 confJson.addProperty("Generate Structures", false);
                 confJson.addProperty("Toggle Command", true);
                 confJson.addProperty("Number of crafts remain", -1);
-                confJson.addProperty("#1", "Valid Default Statistics are:"); //Fix this later
-                confJson.addProperty("#2", "mined, crafted, used, broken, picked_up, dropped, killed, killed_by, custom"); //Fix this later
+                confJson.addProperty("#1", "Valid Default Statistics are:");
+                confJson.addProperty("#2", "mined, crafted, used, broken, picked_up, dropped, killed, killed_by, custom");
                 confJson.addProperty("Default Statistik Category", "mined");
 
+                // New color properties
+                confJson.addProperty("default_text_color", "GRAY");
+                confJson.addProperty("default_category_color", "GRAY");
+                confJson.addProperty("default_material_color", "GRAY");
+                confJson.addProperty("default_number_color", "GOLD");
 
                 String jsonString = GSON.toJson(confJson);
-
                 writer.write(jsonString);
                 System.out.println("Successfully wrote to " + CONF_CONFIG.getAbsolutePath());
             } catch (IOException e) {

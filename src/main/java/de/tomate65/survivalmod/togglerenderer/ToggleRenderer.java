@@ -11,6 +11,7 @@ import net.minecraft.stat.Stats;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import de.tomate65.survivalmod.config.ConfigReader;
+import de.tomate65.survivalmod.commands.ToggleCommand;
 
 import java.io.File;
 import java.io.FileReader;
@@ -27,6 +28,10 @@ public class ToggleRenderer {
         String toggleItem;
         String location;
         String statCategory;
+        String textColor;
+        String categoryColor;
+        String materialColor;
+        String numberColor;
     }
 
     public static void renderForPlayer(ServerPlayerEntity player) {
@@ -41,14 +46,13 @@ public class ToggleRenderer {
 
         switch (data.location) {
             case "actionbar" -> {
-                Text message = createActionbarMessage(data.toggleItem, data.statCategory, currentStatCount);
+                Text message = createActionbarMessage(player, data.toggleItem, data.statCategory, currentStatCount);
                 player.sendMessage(message, true);
             }
-
             case "chat" -> {
                 if (frequency > 0) {
                     if (!lastMilestoneReached.containsKey(playerId)) {
-                        lastMilestoneReached.put(playerId, -1); // Initialize to -1 to handle first milestone
+                        lastMilestoneReached.put(playerId, -1);
                     }
 
                     int lastMilestone = lastMilestoneReached.get(playerId);
@@ -56,20 +60,18 @@ public class ToggleRenderer {
 
                     if (currentMilestone > 0 && currentMilestone > lastMilestone) {
                         player.sendMessage(
-                                createChatMessage(data.toggleItem, data.statCategory, currentMilestone),
+                                createChatMessage(player, data.toggleItem, data.statCategory, currentMilestone),
                                 false
                         );
                         lastMilestoneReached.put(playerId, currentMilestone);
                     }
                 }
             }
-
             case "title" -> {
-                Text message = createTitleMessage(data.toggleItem, data.statCategory, currentStatCount);
+                Text message = createTitleMessage(player, data.toggleItem, data.statCategory, currentStatCount);
                 player.networkHandler.sendPacket(new TitleS2CPacket(message));
                 player.networkHandler.sendPacket(new TitleS2CPacket(Text.empty()));
             }
-
             case "scoreboard" -> {
                 // Scoreboard implementation is missing
             }
@@ -81,22 +83,69 @@ public class ToggleRenderer {
         return data != null && data.toggleItem != null && data.location != null && data.statCategory != null;
     }
 
-    private static Text createActionbarMessage(String itemId, String statCategory, int count) {
-        return Text.literal(String.format("%s %s§8:§r %d",
-                getItemDisplayName(itemId),
-                getStatDisplayName(statCategory),
-                count));
+    private static Text createActionbarMessage(ServerPlayerEntity player, String itemId, String statCategory, int count) {
+        String materialColor = getPlayerColor(player, "material");
+        String categoryColor = getPlayerColor(player, "category");
+        String numberColor = getPlayerColor(player, "number");
+
+        return Text.literal(String.format("%s%s %s%s§8:§r %s%d",
+                materialColor, getItemDisplayName(itemId),
+                categoryColor, getStatDisplayName(statCategory),
+                numberColor, count));
     }
 
-    private static Text createChatMessage(String itemId, String statCategory, int count) {
+    private static Text createChatMessage(ServerPlayerEntity player, String itemId, String statCategory, int count) {
+        String textColor = getPlayerColor(player, "text");
+        String categoryColor = getPlayerColor(player, "category");
+        String numberColor = getPlayerColor(player, "number");
+        String materialColor = getPlayerColor(player, "material");
+
         String itemName = getItemDisplayName(itemId);
-        String actionVerb = getActionVerb(statCategory);
-        String formattedItem = count == 1 ? itemName : itemName + "'s.";
-        return Text.literal(String.format("You %s %d %s", actionVerb, count, formattedItem));
+        String actionName = getActionVerb(statCategory);
+        String pluralSuffix = count == 1 ? "" : "s";
+
+        return Text.literal(String.format("%sYou %s%s %s%d§8: %s%s§7'%ss§8!",
+                textColor,
+                categoryColor, actionName,
+                numberColor, count,
+                materialColor, itemName,
+                textColor, pluralSuffix));
     }
 
-    private static Text createTitleMessage(String itemId, String statCategory, int count) {
-        return createActionbarMessage(itemId, statCategory, count);
+
+    private static Text createTitleMessage(ServerPlayerEntity player, String itemId, String statCategory, int count) {
+        return createActionbarMessage(player, itemId, statCategory, count);
+    }
+
+    private static String getPlayerColor(ServerPlayerEntity player, String colorType) {
+        PlayerToggleData data = getPlayerData(player);
+        if (data == null) {
+            return getDefaultColor(colorType);
+        }
+
+        String color = null;
+        switch (colorType) {
+            case "text": color = data.textColor; break;
+            case "category": color = data.categoryColor; break;
+            case "material": color = data.materialColor; break;
+            case "number": color = data.numberColor; break;
+        }
+
+        if (color == null || color.equals("NONE")) {
+            return getDefaultColor(colorType);
+        }
+
+        return "§" + ToggleCommand.getColorCode(color);
+    }
+
+    private static String getDefaultColor(String colorType) {
+        switch (colorType) {
+            case "text": return "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultTextColor());
+            case "category": return "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultCategoryColor());
+            case "material": return "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultMaterialColor());
+            case "number": return "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultNumberColor());
+            default: return "§r";
+        }
     }
 
     private static String getItemDisplayName(String itemId) {
@@ -165,6 +214,10 @@ public class ToggleRenderer {
             if (json.has("toggle")) data.toggleItem = json.get("toggle").getAsString();
             if (json.has("toggle_location")) data.location = json.get("toggle_location").getAsString();
             if (json.has("stat_category")) data.statCategory = json.get("stat_category").getAsString();
+            if (json.has("text_color")) data.textColor = json.get("text_color").getAsString();
+            if (json.has("category_color")) data.categoryColor = json.get("category_color").getAsString();
+            if (json.has("material_color")) data.materialColor = json.get("material_color").getAsString();
+            if (json.has("number_color")) data.numberColor = json.get("number_color").getAsString();
 
             playerDataCache.put(playerId, data);
             return data;

@@ -30,6 +30,13 @@ public class ToggleCommand {
             "killed", "killed_by", "custom"
     };
 
+    private static final String[] COLORS = {
+            "BLACK", "DARK_BLUE", "DARK_GREEN", "DARK_AQUA", "DARK_RED",
+            "DARK_PURPLE", "GOLD", "GRAY", "DARK_GRAY", "BLUE",
+            "GREEN", "AQUA", "RED", "LIGHT_PURPLE", "YELLOW",
+            "WHITE", "NONE"
+    };
+
     static void loadConfig() {
         if (!CONFIG_FILE.exists()) {
             ConfigGenerator.generateToggleConfig();
@@ -104,7 +111,14 @@ public class ToggleCommand {
                             }
                             return clearPlayerConfig(context);
                         }))
-        );
+                        .then(literal("color")
+                                .executes(context -> {
+                                    context.getSource().sendFeedback(() -> Text.literal("Usage: /toggle color <text|category|material|number> <color>"), false);
+                                    return 1;
+                                })
+                        ));
+
+        registerColorCommands(dispatcher);
 
         for (String toggle : availableToggles) {
             dispatcher.register(
@@ -134,6 +148,18 @@ public class ToggleCommand {
                                             .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "actionbar", "killed_by")))
                                             .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "actionbar", "custom")))
                                     )
+                                    .then(literal("chat")
+                                            .executes(context -> setToggleWithStats(context, toggle, "chat", defaultStatCategory))
+                                            .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "chat", "mined")))
+                                            .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "chat", "crafted")))
+                                            .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "chat", "used")))
+                                            .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "chat", "broken")))
+                                            .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "chat", "picked_up")))
+                                            .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "chat", "dropped")))
+                                            .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "chat", "killed")))
+                                            .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "chat", "killed_by")))
+                                            .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "chat", "custom")))
+                                    )
                                     /*.then(literal("title")
                                             .executes(context -> setToggleWithStats(context, toggle, "title", defaultStatCategory))
                                             .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "title", "mined")))
@@ -146,19 +172,104 @@ public class ToggleCommand {
                                             .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "title", "killed_by")))
                                             .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "title", "custom")))
                                     )*/ //title not implemented right
-                                    .then(literal("chat")
-                                            .executes(context -> setToggleWithStats(context, toggle, "chat", defaultStatCategory))
-                                            .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "chat", "mined")))
-                                            .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "chat", "crafted")))
-                                            .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "chat", "used")))
-                                            .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "chat", "broken")))
-                                            .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "chat", "picked_up")))
-                                            .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "chat", "dropped")))
-                                            .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "chat", "killed")))
-                                            .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "chat", "killed_by")))
-                                            .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "chat", "custom")))
 
-            )));
+            ));
+        }
+    }
+
+    private static void registerColorCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
+        for (String colorType : new String[]{"text", "category", "material", "number"}) {
+            dispatcher.register(
+                    literal("toggle")
+                            .then(literal("color")
+                                    .then(literal(colorType)
+                                            .executes(context -> {
+                                                context.getSource().sendError(Text.literal("Please specify a color"));
+                                                return 0;
+                                            })
+                                            .then(literal("NONE").executes(context -> setColor(context, colorType, "NONE")))
+                                            .then(literal("BLACK").executes(context -> setColor(context, colorType, "BLACK")))
+                                            .then(literal("DARK_BLUE").executes(context -> setColor(context, colorType, "DARK_BLUE")))
+                                            .then(literal("DARK_GREEN").executes(context -> setColor(context, colorType, "DARK_GREEN")))
+                                            .then(literal("DARK_AQUA").executes(context -> setColor(context, colorType, "DARK_AQUA")))
+                                            .then(literal("DARK_RED").executes(context -> setColor(context, colorType, "DARK_RED")))
+                                            .then(literal("DARK_PURPLE").executes(context -> setColor(context, colorType, "DARK_PURPLE")))
+                                            .then(literal("GOLD").executes(context -> setColor(context, colorType, "GOLD")))
+                                            .then(literal("GRAY").executes(context -> setColor(context, colorType, "GRAY")))
+                                            .then(literal("DARK_GRAY").executes(context -> setColor(context, colorType, "DARK_GRAY")))
+                                            .then(literal("BLUE").executes(context -> setColor(context, colorType, "BLUE")))
+                                            .then(literal("GREEN").executes(context -> setColor(context, colorType, "GREEN")))
+                                            .then(literal("AQUA").executes(context -> setColor(context, colorType, "AQUA")))
+                                            .then(literal("RED").executes(context -> setColor(context, colorType, "RED")))
+                                            .then(literal("LIGHT_PURPLE").executes(context -> setColor(context, colorType, "LIGHT_PURPLE")))
+                                            .then(literal("YELLOW").executes(context -> setColor(context, colorType, "YELLOW")))
+                                            .then(literal("WHITE").executes(context -> setColor(context, colorType, "WHITE")))
+                                    )
+                            ));
+        }
+    }
+
+    private static int setColor(CommandContext<ServerCommandSource> context, String colorType, String color) {
+        ServerCommandSource source = context.getSource();
+        if (!(source.getEntity() instanceof ServerPlayerEntity)) {
+            source.sendError(Text.literal("This command can only be executed by a player."));
+            return 0;
+        }
+
+        ServerPlayerEntity player = (ServerPlayerEntity) source.getEntity();
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
+
+        try {
+            PLAYERDATA_DIR.mkdirs();
+            JsonObject playerData = new JsonObject();
+
+            if (playerFile.exists()) {
+                try (FileReader reader = new FileReader(playerFile)) {
+                    playerData = JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+
+            String propertyName = colorType + "_color";
+            playerData.addProperty(propertyName, color);
+
+            try (FileWriter writer = new FileWriter(playerFile)) {
+                new GsonBuilder().setPrettyPrinting().create().toJson(playerData, writer);
+            }
+
+            ToggleRenderer.clearCache(playerId);
+
+            String message = color.equals("NONE")
+                    ? String.format("§aReset %s color to default", colorType)
+                    : String.format("§aSet %s color to §%s%s", colorType, getColorCode(color), color);
+            context.getSource().sendFeedback(() -> Text.literal(message), false);
+            return 1;
+        } catch (IOException | JsonParseException e) {
+            System.err.println("Error handling player color settings: " + e.getMessage());
+            context.getSource().sendError(Text.literal("Error saving your color preference."));
+            return 0;
+        }
+    }
+
+    public static String getColorCode(String colorName) {
+        switch (colorName) {
+            case "BLACK": return "0";
+            case "DARK_BLUE": return "1";
+            case "DARK_GREEN": return "2";
+            case "DARK_AQUA": return "3";
+            case "DARK_RED": return "4";
+            case "DARK_PURPLE": return "5";
+            case "GOLD": return "6";
+            case "GRAY": return "7";
+            case "DARK_GRAY": return "8";
+            case "BLUE": return "9";
+            case "GREEN": return "a";
+            case "AQUA": return "b";
+            case "RED": return "c";
+            case "LIGHT_PURPLE": return "d";
+            case "YELLOW": return "e";
+            case "WHITE": return "f";
+            default: return "r";
         }
     }
 
