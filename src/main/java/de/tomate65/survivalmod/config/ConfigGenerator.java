@@ -60,7 +60,7 @@ public class ConfigGenerator {
                 info.add("");
                 info.add("Feel free to make suggestions or complain about bugs,");
                 info.add("");
-                info.add("This is the mod Version b");
+                info.add("There is no a or b");
                 info.add("");
                 info.add("§6§nFeatures in Progress");
                 info.add("§8- §r/toggle");
@@ -80,6 +80,9 @@ public class ConfigGenerator {
                 changelog.add("");
                 changelog.add("§7-§r §aReworked §7/§2toggle");
                 changelog.add("§7-§r §aMade Toggle command Display colorble per Player");
+                changelog.add("§7-§r §aReworked config files");
+                changelog.add("§7-§r §aFirst Showcase World");
+                changelog.add("§8 - §7(§2Alpha Version 0.0.1§7)§r");
 
                 survival.add("rules", rules);
                 survival.add("info", info);
@@ -125,11 +128,11 @@ public class ConfigGenerator {
             try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
                 JsonObject confJson = new JsonObject();
 
-                confJson.addProperty("ChatMsgFrequency", 5);
-                confJson.addProperty("Generate Recipes", false);
-                confJson.addProperty("Generate Structures", false);
+                confJson.addProperty("ChatMsgFrequency", 10);
+                //confJson.addProperty("Generate Recipes", false);
+                //confJson.addProperty("Generate Structures", false);
                 confJson.addProperty("Toggle Command", true);
-                confJson.addProperty("Number of crafts remain", -1);
+                //confJson.addProperty("Number of crafts remain", -1);
                 confJson.addProperty("#1", "Valid Default Statistics are:");
                 confJson.addProperty("#2", "mined, crafted, used, broken, picked_up, dropped, killed, killed_by, custom");
                 confJson.addProperty("Default Statistik Category", "mined");
