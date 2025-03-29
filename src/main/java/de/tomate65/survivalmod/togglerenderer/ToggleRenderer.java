@@ -70,7 +70,7 @@ public class ToggleRenderer {
             case "title" -> {
                 Text message = createTitleMessage(player, data.toggleItem, data.statCategory, currentStatCount);
                 player.networkHandler.sendPacket(new TitleS2CPacket(message));
-                player.networkHandler.sendPacket(new TitleS2CPacket(Text.empty()));
+                //player.networkHandler.sendPacket(new TitleS2CPacket(Text.empty()));
             }
             case "scoreboard" -> {
                 // Scoreboard implementation is missing

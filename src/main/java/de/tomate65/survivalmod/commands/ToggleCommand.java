@@ -160,7 +160,7 @@ public class ToggleCommand {
                                             .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "chat", "killed_by")))
                                             .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "chat", "custom")))
                                     )
-                                    /*.then(literal("title")
+                                    .then(literal("title")
                                             .executes(context -> setToggleWithStats(context, toggle, "title", defaultStatCategory))
                                             .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "title", "mined")))
                                             .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "title", "crafted")))
@@ -171,7 +171,7 @@ public class ToggleCommand {
                                             .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "title", "killed")))
                                             .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "title", "killed_by")))
                                             .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "title", "custom")))
-                                    )*/ //title not implemented right
+                                    ) //title not implemented right
 
             ));
         }
