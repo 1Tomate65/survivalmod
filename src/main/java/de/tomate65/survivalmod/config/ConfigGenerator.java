@@ -14,7 +14,7 @@ public class ConfigGenerator {
     private static final File CONFIG_DIR_recipe = new File("config/survival/recipe");
     private static final File SURVIVAL_CONFIG = new File(CONFIG_DIR, "survival.json");
     private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
-    private static final File CONF_CONFIG = new File(CONFIG_DIR, "conf.json"); // Neue Konfigurationsdatei
+    private static final File CONF_CONFIG = new File(CONFIG_DIR, "conf.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static void generateConfigs() {
@@ -28,7 +28,7 @@ public class ConfigGenerator {
 
         generateSurvivalConfig();
         generateToggleConfig();
-        generateConfConfig(); // Generiere die neue Konfigurationsdatei
+        generateConfConfig();
 
         if (!CONFIG_DIR_recipe.exists()) {
             boolean dirsCreated = CONFIG_DIR_recipe.mkdirs();
@@ -37,7 +37,7 @@ public class ConfigGenerator {
                 return;
             }
         }
-        // Here the recipe register
+        // Here the missing recipe register
     }
 
     private static void generateSurvivalConfig() {
@@ -61,19 +61,25 @@ public class ConfigGenerator {
                 info.add("");
                 info.add("Feel free to make suggestions or complain about bugs,");
                 info.add("");
-                info.add("This is the mod Version a");
+                info.add("This is the mod Version b");
                 info.add("");
                 info.add("§6§nFeatures in Progress");
                 info.add("§8- §r/toggle");
-                info.add("§7 - §rits unusable for an unoped player");
+                info.add("§7 - §rThe working part is working");
+                info.add("§7 - §rBut has some hidden function");
                 info.add("§8- §rRecipes per config file");
-                info.add("§7 - §rDoesn't work currently");
+                info.add("§7 - §rJust an Idea");
+                info.add("§8- §6Playground World");
+                info.add("§7 - §aThe Idea is,");
+                info.add("§7 - §aYou can experiment with the mod and changing it to your liken.");
+                info.add("§7 - §aAnd giving you a sense of what the mods actually all ads");
+                info.add("§7 - §aYou'll find every default recipe");
+                info.add("§7 - §aYou'll find every default Structure");
+                info.add("§7 - §aYou'll find every default Command");
 
                 changelog.add("§7§l§nChangelog");
                 changelog.add("");
-                changelog.add("Nothings changed it seems");
-                changelog.add("O' I know,");
-                changelog.add("They added the changelog in this update");
+                changelog.add("§7-§r §aReworked §7/§2toggle");
 
                 survival.add("rules", rules);
                 survival.add("info", info);
@@ -100,6 +106,8 @@ public class ConfigGenerator {
                 JsonArray defaultToggles = new JsonArray();
 
                 defaultToggles.add("stone");
+                defaultToggles.add("dirt");
+                defaultToggles.add("oak_log");
 
                 toggleJson.add("toggles", defaultToggles);
                 String jsonString = GSON.toJson(toggleJson);
@@ -118,16 +126,15 @@ public class ConfigGenerator {
             try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
                 JsonObject confJson = new JsonObject();
 
-                // Example configuration values
+                confJson.addProperty("ChatMsgFrequency", 5);
                 confJson.addProperty("Generate Recipes", false);
                 confJson.addProperty("Generate Structures", false);
-                confJson.addProperty("Toggle Command", false);
+                confJson.addProperty("Toggle Command", true);
                 confJson.addProperty("Number of crafts remain", -1);
-
-                // Add the commented commands as actual properties with comments as values
-                confJson.addProperty("#1", "Valid Default Statistics are:");
-                confJson.addProperty("#2", "mined, crafted, used, broken, picked_up, dropped, killed, killed_by, custom");
+                confJson.addProperty("#1", "Valid Default Statistics are:"); //Fix this later
+                confJson.addProperty("#2", "mined, crafted, used, broken, picked_up, dropped, killed, killed_by, custom"); //Fix this later
                 confJson.addProperty("Default Statistik Category", "mined");
+
 
                 String jsonString = GSON.toJson(confJson);
 

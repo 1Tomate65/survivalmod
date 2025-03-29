@@ -12,11 +12,11 @@ public class ConfigReader {
     private static final File SURVIVAL_CONFIG_FILE = new File("config/survival/survival.json");
     private static final File CONF_CONFIG_FILE = new File("config/survival/conf.json");
 
-    // Config fields with default values
     private static boolean generateRecipes = false;
     private static boolean generateStructures = false;
     private static boolean toggleCommandEnabled = false;
-    private static String defaultStatCategory = "mined"; // Fallback if not in config
+    private static int chatMsgFrequency = 0;
+    private static String defaultStatCategory = "mined";
 
     public static void loadConfig() {
         if (!SURVIVAL_CONFIG_FILE.exists()) {
@@ -29,7 +29,7 @@ public class ConfigReader {
             JsonObject commands = config.getAsJsonObject("commands");
             JsonObject survival = commands.getAsJsonObject("survival");
 
-            JsonArray info = survival.getAsJsonArray("info");
+                JsonArray info = survival.getAsJsonArray("info");
             for (int i = 0; i < info.size(); i++) {
                 System.out.println("Info " + (i + 1) + ": " + info.get(i).getAsString());
             }
@@ -54,6 +54,11 @@ public class ConfigReader {
         try (FileReader reader = new FileReader(CONF_CONFIG_FILE)) {
             JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
 
+            if (config.has("ChatMsgFrequency")) {
+                chatMsgFrequency = config.get("ChatMsgFrequency").getAsInt();
+                System.out.println("Loaded ChatMsgFrequency from conf.json: " + chatMsgFrequency);
+            }
+
             // Safely read values with fallbacks
             generateRecipes = config.has("Generate Recipes")
                     ? config.get("Generate Recipes").getAsBoolean()
@@ -75,13 +80,12 @@ public class ConfigReader {
             System.out.println("Generate Structures: " + generateStructures);
             System.out.println("Toggle Command Enabled: " + toggleCommandEnabled);
             System.out.println("Default Stat Category: " + defaultStatCategory);
+            System.out.println("Default Chat Msg Frequency: " + chatMsgFrequency);
 
         } catch (IOException e) {
             System.err.println("Error reading conf config file: " + e.getMessage());
         }
     }
-
-    // Getters
     public static boolean isGenerateRecipes() {
         return generateRecipes;
     }
@@ -96,5 +100,8 @@ public class ConfigReader {
 
     public static String getDefaultStatCategory() {
         return defaultStatCategory;
+    }
+    public static int getChatMsgFrequency() {
+        return chatMsgFrequency;
     }
 }
