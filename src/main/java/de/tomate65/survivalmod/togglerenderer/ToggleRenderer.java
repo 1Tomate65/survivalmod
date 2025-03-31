@@ -4,7 +4,8 @@ import com.google.gson.*;
 import net.minecraft.block.Block;
 import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.stat.Stat;
 import net.minecraft.stat.Stats;
@@ -17,7 +18,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ToggleRenderer {
     private static final File PLAYERDATA_DIR = new File("config/survival/playerdata");
@@ -32,6 +32,7 @@ public class ToggleRenderer {
         String categoryColor;
         String materialColor;
         String numberColor;
+        String language;
     }
 
     public static void renderForPlayer(ServerPlayerEntity player) {
@@ -70,7 +71,6 @@ public class ToggleRenderer {
             case "title" -> {
                 Text message = createTitleMessage(player, data.toggleItem, data.statCategory, currentStatCount);
                 player.networkHandler.sendPacket(new TitleS2CPacket(message));
-                //player.networkHandler.sendPacket(new TitleS2CPacket(Text.empty()));
             }
             case "scoreboard" -> {
                 // Scoreboard implementation is missing
@@ -78,40 +78,62 @@ public class ToggleRenderer {
         }
     }
 
-    public static boolean hasActiveToggle(ServerPlayerEntity player) {
-        PlayerToggleData data = getPlayerData(player);
-        return data != null && data.toggleItem != null && data.location != null && data.statCategory != null;
+    private static TextColor parseColor(String colorCode) {
+        if (colorCode.startsWith("§")) {
+            Formatting formatting = Formatting.byCode(colorCode.charAt(1));
+            if (formatting != null && formatting.isColor()) {
+                return TextColor.fromFormatting(formatting);
+            }
+        }
+        else if (colorCode.startsWith("#")) {
+            try {
+                return TextColor.parse(colorCode).result().orElse(TextColor.fromFormatting(Formatting.WHITE));
+            } catch (Exception e) {
+                return TextColor.fromFormatting(Formatting.WHITE);
+            }
+        }
+        return TextColor.fromFormatting(Formatting.WHITE);
     }
 
     private static Text createActionbarMessage(ServerPlayerEntity player, String itemId, String statCategory, int count) {
-        String materialColor = getPlayerColor(player, "material");
-        String categoryColor = getPlayerColor(player, "category");
-        String numberColor = getPlayerColor(player, "number");
+        PlayerToggleData data = getPlayerData(player);
+        String langCode = data != null && data.language != null ? data.language : ConfigReader.getDefaultLanguage();
 
-        return Text.literal(String.format("%s%s %s%s§8:§r %s%d",
-                materialColor, getItemDisplayName(itemId),
-                categoryColor, getStatDisplayName(statCategory),
-                numberColor, count));
+        Text itemName = getTranslatedItemName(player, itemId);
+        String statName = ConfigReader.translate("stat." + statCategory, langCode);
+
+        return Text.literal("")
+                .append(itemName.copy().styled(style -> style.withColor(parseColor(getPlayerColor(player, "material")))))
+                .append(" ")
+                .append(Text.literal(statName).styled(style -> style.withColor(parseColor(getPlayerColor(player, "category")))))
+                .append(": ")
+                .append(Text.literal(String.valueOf(count)).styled(style -> style.withColor(parseColor(getPlayerColor(player, "number")))));
     }
 
     private static Text createChatMessage(ServerPlayerEntity player, String itemId, String statCategory, int count) {
-        String textColor = getPlayerColor(player, "text");
-        String categoryColor = getPlayerColor(player, "category");
-        String numberColor = getPlayerColor(player, "number");
-        String materialColor = getPlayerColor(player, "material");
+        PlayerToggleData data = getPlayerData(player);
+        String langCode = data != null && data.language != null ? data.language : ConfigReader.getDefaultLanguage();
 
-        String itemName = getItemDisplayName(itemId);
-        String actionName = getActionVerb(statCategory);
-        String pluralSuffix = count == 1 ? "" : "s";
+        Text itemName = getTranslatedItemName(player, itemId);
+        String actionVerb = ConfigReader.translate("message.action." + statCategory, langCode);
+        String you = ConfigReader.translate("message.you", langCode);
+        String have = ConfigReader.translate("message.have", langCode);
+        String pluralSuffix = count == 1 ? "" : ConfigReader.translate("message.plural", langCode);
+        String exclamation = ConfigReader.translate("message.exclamation", langCode);
 
-        return Text.literal(String.format("%sYou %s%s %s%d§8: %s%s§7'%ss§8!",
-                textColor,
-                categoryColor, actionName,
-                numberColor, count,
-                materialColor, itemName,
-                textColor, pluralSuffix));
+        return Text.literal("")
+                .append(Text.literal(you).styled(style -> style.withColor(parseColor(getPlayerColor(player, "text")))))
+                .append(" ")
+                .append(Text.literal(have).styled(style -> style.withColor(parseColor(getPlayerColor(player, "text")))))
+                .append(" ")
+                .append(Text.literal(actionVerb).styled(style -> style.withColor(parseColor(getPlayerColor(player, "category")))))
+                .append(" ")
+                .append(Text.literal(String.valueOf(count)).styled(style -> style.withColor(parseColor(getPlayerColor(player, "number")))))
+                .append(" ")
+                .append(itemName.copy().styled(style -> style.withColor(parseColor(getPlayerColor(player, "material")))))
+                .append(pluralSuffix)
+                .append(Text.literal(exclamation).styled(style -> style.withColor(parseColor(getPlayerColor(player, "text")))));
     }
-
 
     private static Text createTitleMessage(ServerPlayerEntity player, String itemId, String statCategory, int count) {
         return createActionbarMessage(player, itemId, statCategory, count);
@@ -148,31 +170,13 @@ public class ToggleRenderer {
         }
     }
 
-    private static String getItemDisplayName(String itemId) {
+    private static Text getTranslatedItemName(ServerPlayerEntity player, String itemId) {
         try {
             Item item = Registries.ITEM.get(Identifier.of(itemId));
-            return item.getName().getString();
+            return Text.translatable(item.getTranslationKey());
         } catch (Exception e) {
-            return itemId;
+            return Text.literal(itemId);
         }
-    }
-
-    private static String getStatDisplayName(String statKey) {
-        return Arrays.stream(statKey.split("_"))
-                .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1))
-                .collect(Collectors.joining(" "));
-    }
-
-    private static String getActionVerb(String statCategory) {
-        return switch (statCategory) {
-            case "mined" -> "mined";
-            case "crafted" -> "crafted";
-            case "used" -> "used";
-            case "broken" -> "broke";
-            case "picked_up" -> "picked up";
-            case "dropped" -> "dropped";
-            default -> statCategory.replace("_", " ");
-        };
     }
 
     private static int getStatCount(ServerPlayerEntity player, String itemName, String statCategory) {
@@ -197,6 +201,16 @@ public class ToggleRenderer {
         }
     }
 
+    public static boolean hasActiveToggle(ServerPlayerEntity player) {
+        PlayerToggleData data = getPlayerData(player);
+        return data != null && data.toggleItem != null && data.location != null && data.statCategory != null;
+    }
+
+    public static void clearCache(UUID playerId) {
+        playerDataCache.remove(playerId);
+        lastMilestoneReached.remove(playerId);
+    }
+
     private static PlayerToggleData getPlayerData(ServerPlayerEntity player) {
         UUID playerId = player.getUuid();
 
@@ -218,6 +232,7 @@ public class ToggleRenderer {
             if (json.has("category_color")) data.categoryColor = json.get("category_color").getAsString();
             if (json.has("material_color")) data.materialColor = json.get("material_color").getAsString();
             if (json.has("number_color")) data.numberColor = json.get("number_color").getAsString();
+            if (json.has("language")) data.language = json.get("language").getAsString();
 
             playerDataCache.put(playerId, data);
             return data;
@@ -225,10 +240,5 @@ public class ToggleRenderer {
             System.err.println("Error reading player toggle data: " + e.getMessage());
             return null;
         }
-    }
-
-    public static void clearCache(UUID playerId) {
-        playerDataCache.remove(playerId);
-        lastMilestoneReached.remove(playerId);
     }
 }

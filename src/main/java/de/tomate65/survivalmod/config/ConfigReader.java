@@ -2,26 +2,35 @@ package de.tomate65.survivalmod.config;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class ConfigReader {
     private static final File SURVIVAL_CONFIG_FILE = new File("config/survival/survival.json");
     private static final File CONF_CONFIG_FILE = new File("config/survival/conf.json");
+    private static final File LANG_DIR = new File("config/survival/lang");
 
     private static boolean generateRecipes = false;
     private static boolean generateStructures = false;
     private static boolean toggleCommandEnabled = false;
     private static int chatMsgFrequency = 0;
     private static String defaultStatCategory = "mined";
+    private static String defaultLanguage = "en_us";
 
     private static String defaultTextColor = "GRAY";
     private static String defaultCategoryColor = "GRAY";
     private static String defaultMaterialColor = "GRAY";
     private static String defaultNumberColor = "GOLD";
+
+    private static final Map<String, Map<String, String>> translations = new HashMap<>();
 
     public static void loadConfig() {
         if (!SURVIVAL_CONFIG_FILE.exists()) {
@@ -48,6 +57,29 @@ public class ConfigReader {
         }
 
         loadConfConfig();
+        loadTranslations();
+    }
+
+    private static void loadTranslations() {
+        translations.clear();
+        File[] langFiles = LANG_DIR.listFiles((dir, name) -> name.endsWith(".json"));
+        if (langFiles == null) return;
+
+        for (File langFile : langFiles) {
+            String langCode = langFile.getName().replace(".json", "");
+            try (FileReader reader = new FileReader(langFile)) {
+                JsonObject langData = JsonParser.parseReader(reader).getAsJsonObject();
+                Map<String, String> langMap = new HashMap<>();
+
+                for (String key : langData.keySet()) {
+                    langMap.put(key, langData.get(key).getAsString());
+                }
+
+                translations.put(langCode, langMap);
+            } catch (IOException | JsonParseException e) {
+                System.err.println("Error reading language file " + langFile.getName() + ": " + e.getMessage());
+            }
+        }
     }
 
     private static void loadConfConfig() {
@@ -109,6 +141,24 @@ public class ConfigReader {
         }
     }
 
+    public static Set<String> getAvailableLanguages() {
+        File langDir = new File("config/survival/lang");
+        File[] files = langDir.listFiles((dir, name) -> name.endsWith(".json"));
+        Set<String> languages = new HashSet<>();
+        if (files != null) {
+            for (File file : files) {
+                languages.add(file.getName().replace(".json", ""));
+            }
+        }
+        return languages;
+    }
+
+    public static String translate(String key, String langCode) {
+        Map<String, String> lang = translations.getOrDefault(langCode, translations.get(defaultLanguage));
+        if (lang == null) return key;
+        return lang.getOrDefault(key, key);
+    }
+
     public static boolean isGenerateRecipes() {
         return generateRecipes;
     }
@@ -143,5 +193,8 @@ public class ConfigReader {
 
     public static String getDefaultNumberColor() {
         return defaultNumberColor;
+    }
+    public static String getDefaultLanguage() {
+        return defaultLanguage;
     }
 }

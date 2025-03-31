@@ -28,16 +28,20 @@ public class SurvivalCommand {
         loadConfig();
         CommandRegistrationCallback.EVENT.register((dispatcher, dispatcher2, dispatcher3) -> registerCommands(dispatcher));
     }
+
     private static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 literal("survival")
-                        .then(literal("reload").executes(context -> {
-                            loadConfig();
-                            context.getSource().sendFeedback(() -> Text.literal("§7Configuration reloaded."), false);
-                            return 1;
-                        }))
+                        .then(literal("reload")
+                                .requires(source -> source.hasPermissionLevel(2)) // OP level 2 required
+                                .executes(context -> {
+                                    loadConfig();
+                                    context.getSource().sendFeedback(() -> Text.literal("§7Configuration reloaded."), false);
+                                    return 1;
+                                }))
                         .executes(SurvivalCommand::listAvailableCommands)
         );
+
         for (String subcommand : subcommands.keySet()) {
             dispatcher.register(
                     literal("survival")

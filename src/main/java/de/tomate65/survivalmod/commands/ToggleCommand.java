@@ -2,10 +2,14 @@ package de.tomate65.survivalmod.commands;
 
 import com.google.gson.*;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.tomate65.survivalmod.config.ConfigGenerator;
+import de.tomate65.survivalmod.config.ConfigReader;
 import de.tomate65.survivalmod.togglerenderer.ToggleRenderer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -14,8 +18,9 @@ import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.server.command.CommandManager.*;
 
 public class ToggleCommand {
     private static final File CONFIG_FILE = new File("config/survival/toggle.json");
@@ -83,6 +88,14 @@ public class ToggleCommand {
         }
     }
 
+    private static final SuggestionProvider<ServerCommandSource> LANGUAGE_SUGGESTIONS =
+            (context, builder) -> {
+                for (String lang : ConfigReader.getAvailableLanguages()) {
+                    builder.suggest(lang);
+                }
+                return CompletableFuture.completedFuture(builder.build());
+            };
+
     private static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 literal("toggle")
@@ -94,16 +107,6 @@ public class ToggleCommand {
                             context.getSource().sendFeedback(() -> Text.literal("Usage: /toggle <toggle> <location> [stat_category]"), false);
                             return 1;
                         })
-                        .then(literal("reload").executes(context -> {
-                            if (!isCommandEnabled) {
-                                context.getSource().sendError(Text.literal("This Command is Disabled, please contact an admin if you think this is a mistake"));
-                                return 0;
-                            }
-                            loadConfig();
-                            loadMainConfig();
-                            context.getSource().sendFeedback(() -> Text.literal("Toggle configuration reloaded."), false);
-                            return 1;
-                        }))
                         .then(literal("clear").executes(context -> {
                             if (!isCommandEnabled) {
                                 context.getSource().sendError(Text.literal("This Command is Disabled, please contact an admin if you think this is a mistake"));
@@ -116,7 +119,19 @@ public class ToggleCommand {
                                     context.getSource().sendFeedback(() -> Text.literal("Usage: /toggle color <text|category|material|number> <color>"), false);
                                     return 1;
                                 })
-                        ));
+                        )
+                        .then(literal("language")
+                                .executes(context -> {
+                                    context.getSource().sendFeedback(() -> Text.literal("Available languages: " + String.join(", ", ConfigReader.getAvailableLanguages())), false);
+                                    return 1;
+                                })
+                                .then(argument("lang", StringArgumentType.word())
+                                        .suggests(LANGUAGE_SUGGESTIONS)
+                                        .executes(context -> {
+                                            String lang = StringArgumentType.getString(context, "lang");
+                                            return setPlayerLanguage(context, lang);
+                                        })
+                                )));
 
         registerColorCommands(dispatcher);
 
@@ -171,11 +186,52 @@ public class ToggleCommand {
                                             .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "title", "killed")))
                                             .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "title", "killed_by")))
                                             .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "title", "custom")))
-                                    ) //title not implemented right
+                                    )
 
             ));
         }
     }
+
+    private static int setPlayerLanguage(CommandContext<ServerCommandSource> context, String language) {
+        ServerCommandSource source = context.getSource();
+        if (!(source.getEntity() instanceof ServerPlayerEntity)) {
+            source.sendError(Text.literal("This command can only be executed by a player."));
+            return 0;
+        }
+
+        ServerPlayerEntity player = (ServerPlayerEntity) source.getEntity();
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
+
+        try {
+            PLAYERDATA_DIR.mkdirs();
+            JsonObject playerData = new JsonObject();
+
+            if (playerFile.exists()) {
+                try (FileReader reader = new FileReader(playerFile)) {
+                    playerData = JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+
+            playerData.addProperty("language", language);
+            playerData.addProperty("uuid", playerId.toString());
+            playerData.addProperty("playername", player.getName().getString());
+
+            try (FileWriter writer = new FileWriter(playerFile)) {
+                new GsonBuilder().setPrettyPrinting().create().toJson(playerData, writer);
+            }
+
+            ToggleRenderer.clearCache(playerId);
+
+            context.getSource().sendFeedback(() -> Text.literal("§aSet language to §e" + language), false);
+            return 1;
+        } catch (IOException | JsonParseException e) {
+            System.err.println("Error handling player language settings: " + e.getMessage());
+            context.getSource().sendError(Text.literal("Error saving your language preference."));
+            return 0;
+        }
+    }
+
 
     private static void registerColorCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
         for (String colorType : new String[]{"text", "category", "material", "number"}) {
