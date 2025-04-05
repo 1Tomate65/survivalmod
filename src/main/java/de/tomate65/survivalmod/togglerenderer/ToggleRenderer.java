@@ -35,6 +35,34 @@ public class ToggleRenderer {
         String language;
     }
 
+    private static String formatPlaytime(int ticks) {
+        int seconds = ticks / 20;
+        int minutes = seconds / 60;
+        int hours = minutes / 60;
+        int days = hours / 24;
+        int years = days / 365;
+
+        seconds %= 60;
+        minutes %= 60;
+        hours %= 24;
+        days %= 365;
+
+        StringBuilder sb = new StringBuilder();
+
+        if (years > 0) sb.append(years).append("y, ");
+        if (days > 0) sb.append(days).append("d, ");
+        if (hours > 0) sb.append(hours).append("h, ");
+        if (minutes > 0) sb.append(minutes).append("m, ");
+        if (seconds > 0 || sb.length() == 0) { // Always show at least seconds
+            sb.append(seconds).append("s");
+        } else {
+            // Remove trailing comma if we didn't add seconds
+            sb.setLength(sb.length() - 2);
+        }
+
+        return sb.toString();
+    }
+
     public static void renderForPlayer(ServerPlayerEntity player) {
         PlayerToggleData data = getPlayerData(player);
         if (data == null || !hasActiveToggle(player)) {
@@ -42,12 +70,17 @@ public class ToggleRenderer {
         }
 
         UUID playerId = player.getUuid();
-        int currentStatCount = getStatCount(player, data.toggleItem, data.statCategory);
+        int currentStatCount = data.toggleItem.equals("timeplayed")
+                ? player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.PLAY_TIME))
+                : getStatCount(player, data.toggleItem, data.statCategory);
         int frequency = ConfigReader.getChatMsgFrequency();
 
         switch (data.location) {
             case "actionbar" -> {
-                Text message = createActionbarMessage(player, data.toggleItem, data.statCategory, currentStatCount);
+                Text message = data.toggleItem.equals("timeplayed")
+                        ? Text.literal(formatPlaytime(currentStatCount))
+                        .styled(style -> style.withColor(parseColor(getPlayerColor(player, "number"))))
+                        : createActionbarMessage(player, data.toggleItem, data.statCategory, currentStatCount);
                 player.sendMessage(message, true);
             }
             case "chat" -> {
@@ -203,7 +236,13 @@ public class ToggleRenderer {
 
     public static boolean hasActiveToggle(ServerPlayerEntity player) {
         PlayerToggleData data = getPlayerData(player);
-        return data != null && data.toggleItem != null && data.location != null && data.statCategory != null;
+        if (data == null || data.toggleItem == null || data.location == null) {
+            return false;
+        }
+        if (data.toggleItem.equals("timeplayed") && !data.location.equals("actionbar")) {
+            return false;
+        }
+        return data.toggleItem.equals("timeplayed") || data.statCategory != null;
     }
 
     public static void clearCache(UUID playerId) {

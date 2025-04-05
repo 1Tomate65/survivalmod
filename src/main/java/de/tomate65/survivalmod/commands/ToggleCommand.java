@@ -9,7 +9,6 @@ import de.tomate65.survivalmod.config.ConfigGenerator;
 import de.tomate65.survivalmod.config.ConfigReader;
 import de.tomate65.survivalmod.togglerenderer.ToggleRenderer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.command.CommandSource;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -131,64 +130,107 @@ public class ToggleCommand {
                                             String lang = StringArgumentType.getString(context, "lang");
                                             return setPlayerLanguage(context, lang);
                                         })
-                                )));
+                                )
+                        ));
 
         registerColorCommands(dispatcher);
 
         for (String toggle : availableToggles) {
-            dispatcher.register(
-                    literal("toggle")
-                            .then(literal(toggle)
-                                    /*.then(literal("scoreboard")
-                                            .executes(context -> setToggleWithStats(context, toggle, "scoreboard", defaultStatCategory))
-                                            .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "mined")))
-                                            .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "crafted")))
-                                            .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "used")))
-                                            .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "broken")))
-                                            .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "picked_up")))
-                                            .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "dropped")))
-                                            .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "killed")))
-                                            .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "killed_by")))
-                                            .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "scoreboard", "custom")))
-                                    )*/ //scoreboard not implemented
-                                    .then(literal("actionbar")
-                                            .executes(context -> setToggleWithStats(context, toggle, "actionbar", defaultStatCategory))
-                                            .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "actionbar", "mined")))
-                                            .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "actionbar", "crafted")))
-                                            .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "actionbar", "used")))
-                                            .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "actionbar", "broken")))
-                                            .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "actionbar", "picked_up")))
-                                            .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "actionbar", "dropped")))
-                                            .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "actionbar", "killed")))
-                                            .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "actionbar", "killed_by")))
-                                            .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "actionbar", "custom")))
-                                    )
-                                    .then(literal("chat")
-                                            .executes(context -> setToggleWithStats(context, toggle, "chat", defaultStatCategory))
-                                            .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "chat", "mined")))
-                                            .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "chat", "crafted")))
-                                            .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "chat", "used")))
-                                            .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "chat", "broken")))
-                                            .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "chat", "picked_up")))
-                                            .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "chat", "dropped")))
-                                            .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "chat", "killed")))
-                                            .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "chat", "killed_by")))
-                                            .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "chat", "custom")))
-                                    )
-                                    .then(literal("title")
-                                            .executes(context -> setToggleWithStats(context, toggle, "title", defaultStatCategory))
-                                            .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "title", "mined")))
-                                            .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "title", "crafted")))
-                                            .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "title", "used")))
-                                            .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "title", "broken")))
-                                            .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "title", "picked_up")))
-                                            .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "title", "dropped")))
-                                            .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "title", "killed")))
-                                            .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "title", "killed_by")))
-                                            .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "title", "custom")))
-                                    )
+            if (toggle.equals("timeplayed")) {
+                // Special handling for timeplayed - only allow actionbar
+                dispatcher.register(
+                        literal("toggle")
+                                .then(literal(toggle)
+                                        .then(literal("actionbar")
+                                                .executes(context -> setTimePlayedToggle(context, "actionbar"))
+                                        )
+                                ));
+            } else {
+                // Normal handling for other toggles
+                dispatcher.register(
+                        literal("toggle")
+                                .then(literal(toggle)
+                                        .then(literal("actionbar")
+                                                .executes(context -> setToggleWithStats(context, toggle, "actionbar", defaultStatCategory))
+                                                .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "actionbar", "mined")))
+                                                .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "actionbar", "crafted")))
+                                                .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "actionbar", "used")))
+                                                .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "actionbar", "broken")))
+                                                .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "actionbar", "picked_up")))
+                                                .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "actionbar", "dropped")))
+                                                .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "actionbar", "killed")))
+                                                .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "actionbar", "killed_by")))
+                                                .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "actionbar", "custom")))
+                                        )
+                                        .then(literal("chat")
+                                                .executes(context -> setToggleWithStats(context, toggle, "chat", defaultStatCategory))
+                                                .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "chat", "mined")))
+                                                .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "chat", "crafted")))
+                                                .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "chat", "used")))
+                                                .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "chat", "broken")))
+                                                .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "chat", "picked_up")))
+                                                .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "chat", "dropped")))
+                                                .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "chat", "killed")))
+                                                .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "chat", "killed_by")))
+                                                .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "chat", "custom")))
+                                        )
+                                        .then(literal("title")
+                                                .executes(context -> setToggleWithStats(context, toggle, "title", defaultStatCategory))
+                                                .then(literal("mined").executes(context -> setToggleWithStats(context, toggle, "title", "mined")))
+                                                .then(literal("crafted").executes(context -> setToggleWithStats(context, toggle, "title", "crafted")))
+                                                .then(literal("used").executes(context -> setToggleWithStats(context, toggle, "title", "used")))
+                                                .then(literal("broken").executes(context -> setToggleWithStats(context, toggle, "title", "broken")))
+                                                .then(literal("picked_up").executes(context -> setToggleWithStats(context, toggle, "title", "picked_up")))
+                                                .then(literal("dropped").executes(context -> setToggleWithStats(context, toggle, "title", "dropped")))
+                                                .then(literal("killed").executes(context -> setToggleWithStats(context, toggle, "title", "killed")))
+                                                .then(literal("killed_by").executes(context -> setToggleWithStats(context, toggle, "title", "killed_by")))
+                                                .then(literal("custom").executes(context -> setToggleWithStats(context, toggle, "title", "custom")))
+                                        )
+                                )
+                );
+            }
+        }
+    }
 
-            ));
+    private static int setTimePlayedToggle(CommandContext<ServerCommandSource> context, String location) {
+        ServerCommandSource source = context.getSource();
+        if (!(source.getEntity() instanceof ServerPlayerEntity)) {
+            source.sendError(Text.literal("This command can only be executed by a player."));
+            return 0;
+        }
+
+        ServerPlayerEntity player = (ServerPlayerEntity) source.getEntity();
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
+
+        try {
+            PLAYERDATA_DIR.mkdirs();
+            JsonObject playerData = new JsonObject();
+
+            if (playerFile.exists()) {
+                try (FileReader reader = new FileReader(playerFile)) {
+                    playerData = JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+
+            playerData.addProperty("uuid", playerId.toString());
+            playerData.addProperty("playername", player.getName().getString());
+            playerData.addProperty("toggle", "timeplayed");
+            playerData.addProperty("toggle_location", location);
+            playerData.addProperty("stat_category", "custom"); // Not used but required
+
+            try (FileWriter writer = new FileWriter(playerFile)) {
+                new GsonBuilder().setPrettyPrinting().create().toJson(playerData, writer);
+            }
+
+            ToggleRenderer.clearCache(playerId);
+
+            context.getSource().sendFeedback(() -> Text.literal("§aSet timeplayed to display in §e" + location), false);
+            return 1;
+        } catch (IOException | JsonParseException e) {
+            System.err.println("Error handling player toggle settings: " + e.getMessage());
+            context.getSource().sendError(Text.literal("Error saving your toggle preference."));
+            return 0;
         }
     }
 

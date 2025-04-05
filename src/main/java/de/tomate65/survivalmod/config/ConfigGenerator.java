@@ -250,11 +250,7 @@ public class ConfigGenerator {
 
                 changelog.add("§7§l§nChangelog");
                 changelog.add("");
-                changelog.add("§7-§r §aReworked §7/§2toggle");
-                changelog.add("§7-§r §aMade Toggle command Display colorble per Player");
-                changelog.add("§7-§r §aReworked config files");
-                changelog.add("§7-§r §aFirst Showcase World");
-                changelog.add("§8 - §7(§2Alpha Version 0.0.1§7)§r");
+                changelog.add("§7-§r §aAdd Time Played to toggle command");
 
                 survival.add("rules", rules);
                 survival.add("info", info);
@@ -282,6 +278,7 @@ public class ConfigGenerator {
                 defaultToggles.add("stone");
                 defaultToggles.add("dirt");
                 defaultToggles.add("oak_log");
+                defaultToggles.add("timeplayed");
 
                 toggleJson.add("toggles", defaultToggles);
                 String jsonString = GSON.toJson(toggleJson);
