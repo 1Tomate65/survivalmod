@@ -10,6 +10,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.stat.Stat;
 import net.minecraft.stat.Stats;
 import net.minecraft.item.Item;
+import net.minecraft.entity.EntityType;
 import net.minecraft.registry.Registries;
 import de.tomate65.survivalmod.config.ConfigReader;
 import de.tomate65.survivalmod.commands.ToggleCommand;
@@ -32,35 +33,8 @@ public class ToggleRenderer {
         String categoryColor;
         String materialColor;
         String numberColor;
+        String timeColor;
         String language;
-    }
-
-    private static String formatPlaytime(int ticks) {
-        int seconds = ticks / 20;
-        int minutes = seconds / 60;
-        int hours = minutes / 60;
-        int days = hours / 24;
-        int years = days / 365;
-
-        seconds %= 60;
-        minutes %= 60;
-        hours %= 24;
-        days %= 365;
-
-        StringBuilder sb = new StringBuilder();
-
-        if (years > 0) sb.append(years).append("y, ");
-        if (days > 0) sb.append(days).append("d, ");
-        if (hours > 0) sb.append(hours).append("h, ");
-        if (minutes > 0) sb.append(minutes).append("m, ");
-        if (seconds > 0 || sb.length() == 0) { // Always show at least seconds
-            sb.append(seconds).append("s");
-        } else {
-            // Remove trailing comma if we didn't add seconds
-            sb.setLength(sb.length() - 2);
-        }
-
-        return sb.toString();
     }
 
     public static void renderForPlayer(ServerPlayerEntity player) {
@@ -73,162 +47,260 @@ public class ToggleRenderer {
         int currentStatCount = data.toggleItem.equals("timeplayed")
                 ? player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.PLAY_TIME))
                 : getStatCount(player, data.toggleItem, data.statCategory);
-        int frequency = ConfigReader.getChatMsgFrequency();
 
-        switch (data.location) {
-            case "actionbar" -> {
-                Text message = data.toggleItem.equals("timeplayed")
-                        ? Text.literal(formatPlaytime(currentStatCount))
-                        .styled(style -> style.withColor(parseColor(getPlayerColor(player, "number"))))
-                        : createActionbarMessage(player, data.toggleItem, data.statCategory, currentStatCount);
-                player.sendMessage(message, true);
-            }
-            case "chat" -> {
-                if (frequency > 0) {
-                    if (!lastMilestoneReached.containsKey(playerId)) {
-                        lastMilestoneReached.put(playerId, -1);
-                    }
-
-                    int lastMilestone = lastMilestoneReached.get(playerId);
-                    int currentMilestone = (currentStatCount / frequency) * frequency;
-
-                    if (currentMilestone > 0 && currentMilestone > lastMilestone) {
-                        player.sendMessage(
-                                createChatMessage(player, data.toggleItem, data.statCategory, currentMilestone),
-                                false
-                        );
-                        lastMilestoneReached.put(playerId, currentMilestone);
-                    }
-                }
-            }
-            case "title" -> {
-                Text message = createTitleMessage(player, data.toggleItem, data.statCategory, currentStatCount);
-                player.networkHandler.sendPacket(new TitleS2CPacket(message));
-            }
-            case "scoreboard" -> {
-                // Scoreboard implementation is missing
-            }
+        if (data.location.equals("actionbar")) {
+            Text message = data.toggleItem.equals("timeplayed")
+                    ? Text.literal(formatPlaytime(currentStatCount, player)) // Updated call
+                    .styled(style -> style.withColor(parseColor(getPlayerColor(player, "time"))))
+                    : createActionbarMessage(player, data.toggleItem, data.statCategory, currentStatCount);
+            player.sendMessage(message, true);
+        } else if (data.location.equals("chat")) {
+            handleChatMessage(player, data, currentStatCount);
+        } else if (data.location.equals("title")) {
+            Text message = createTitleMessage(player, data.toggleItem, data.statCategory, currentStatCount);
+            player.networkHandler.sendPacket(new TitleS2CPacket(message));
         }
     }
 
-    private static TextColor parseColor(String colorCode) {
-        if (colorCode.startsWith("§")) {
-            Formatting formatting = Formatting.byCode(colorCode.charAt(1));
-            if (formatting != null && formatting.isColor()) {
-                return TextColor.fromFormatting(formatting);
+    private static void handleChatMessage(ServerPlayerEntity player, PlayerToggleData data, int currentStatCount) {
+        int frequency = ConfigReader.getChatMsgFrequency();
+        if (frequency > 0) {
+            UUID playerId = player.getUuid();
+            lastMilestoneReached.putIfAbsent(playerId, -1);
+
+            int lastMilestone = lastMilestoneReached.get(playerId);
+            int currentMilestone = (currentStatCount / frequency) * frequency;
+
+            if (currentMilestone > 0 && currentMilestone > lastMilestone) {
+                player.sendMessage(
+                        createChatMessage(player, data.toggleItem, data.statCategory, currentMilestone),
+                        false
+                );
+                lastMilestoneReached.put(playerId, currentMilestone);
             }
         }
-        else if (colorCode.startsWith("#")) {
-            try {
-                return TextColor.parse(colorCode).result().orElse(TextColor.fromFormatting(Formatting.WHITE));
-            } catch (Exception e) {
-                return TextColor.fromFormatting(Formatting.WHITE);
-            }
-        }
-        return TextColor.fromFormatting(Formatting.WHITE);
     }
 
     private static Text createActionbarMessage(ServerPlayerEntity player, String itemId, String statCategory, int count) {
-        PlayerToggleData data = getPlayerData(player);
-        String langCode = data != null && data.language != null ? data.language : ConfigReader.getDefaultLanguage();
-
-        Text itemName = getTranslatedItemName(player, itemId);
+        String langCode = getPlayerLanguage(player);
+        Text itemName = getTranslatedItemName(player, itemId, statCategory);
         String statName = ConfigReader.translate("stat." + statCategory, langCode);
 
-        return Text.literal("")
-                .append(itemName.copy().styled(style -> style.withColor(parseColor(getPlayerColor(player, "material")))))
-                .append(" ")
-                .append(Text.literal(statName).styled(style -> style.withColor(parseColor(getPlayerColor(player, "category")))))
-                .append(": ")
-                .append(Text.literal(String.valueOf(count)).styled(style -> style.withColor(parseColor(getPlayerColor(player, "number")))));
+        // Get all colors
+        TextColor materialColor = parseColor(getPlayerColor(player, "material"));
+        TextColor categoryColor = parseColor(getPlayerColor(player, "category"));
+        TextColor numberColor = parseColor(getPlayerColor(player, "number"));
+
+        return Text.empty()
+                .append(itemName.copy().styled(style -> style.withColor(materialColor)))
+                .append(Text.literal(" ").styled(style -> style.withColor(Formatting.RESET)))
+                .append(Text.literal(statName).styled(style -> style.withColor(categoryColor)))
+                .append(Text.literal(": ").styled(style -> style.withColor(Formatting.RESET)))
+                .append(Text.literal(String.valueOf(count)).styled(style -> style.withColor(numberColor)));
     }
 
     private static Text createChatMessage(ServerPlayerEntity player, String itemId, String statCategory, int count) {
-        PlayerToggleData data = getPlayerData(player);
-        String langCode = data != null && data.language != null ? data.language : ConfigReader.getDefaultLanguage();
-
-        Text itemName = getTranslatedItemName(player, itemId);
+        String langCode = getPlayerLanguage(player);
+        Text itemName = getTranslatedItemName(player, itemId, statCategory);
         String actionVerb = ConfigReader.translate("message.action." + statCategory, langCode);
         String you = ConfigReader.translate("message.you", langCode);
         String have = ConfigReader.translate("message.have", langCode);
         String pluralSuffix = count == 1 ? "" : ConfigReader.translate("message.plural", langCode);
         String exclamation = ConfigReader.translate("message.exclamation", langCode);
 
-        return Text.literal("")
-                .append(Text.literal(you).styled(style -> style.withColor(parseColor(getPlayerColor(player, "text")))))
-                .append(" ")
-                .append(Text.literal(have).styled(style -> style.withColor(parseColor(getPlayerColor(player, "text")))))
-                .append(" ")
-                .append(Text.literal(actionVerb).styled(style -> style.withColor(parseColor(getPlayerColor(player, "category")))))
-                .append(" ")
-                .append(Text.literal(String.valueOf(count)).styled(style -> style.withColor(parseColor(getPlayerColor(player, "number")))))
-                .append(" ")
-                .append(itemName.copy().styled(style -> style.withColor(parseColor(getPlayerColor(player, "material")))))
-                .append(pluralSuffix)
-                .append(Text.literal(exclamation).styled(style -> style.withColor(parseColor(getPlayerColor(player, "text")))));
+        // Get all colors
+        TextColor textColor = parseColor(getPlayerColor(player, "text"));
+        TextColor categoryColor = parseColor(getPlayerColor(player, "category"));
+        TextColor numberColor = parseColor(getPlayerColor(player, "number"));
+        TextColor materialColor = parseColor(getPlayerColor(player, "material"));
+
+        // Build the message with proper translations and colors
+        return Text.empty()
+                .append(Text.literal(you + " ").styled(style -> style.withColor(textColor)))
+                .append(Text.literal(have + " ").styled(style -> style.withColor(textColor)))
+                .append(Text.literal(actionVerb + " ").styled(style -> style.withColor(categoryColor)))
+                .append(Text.literal(String.valueOf(count) + " ").styled(style -> style.withColor(numberColor)))
+                .append(itemName.copy().styled(style -> style.withColor(materialColor)))
+                .append(Text.literal(pluralSuffix + exclamation).styled(style -> style.withColor(textColor)));
     }
 
     private static Text createTitleMessage(ServerPlayerEntity player, String itemId, String statCategory, int count) {
         return createActionbarMessage(player, itemId, statCategory, count);
     }
 
-    private static String getPlayerColor(ServerPlayerEntity player, String colorType) {
-        PlayerToggleData data = getPlayerData(player);
-        if (data == null) {
-            return getDefaultColor(colorType);
-        }
-
-        String color = null;
-        switch (colorType) {
-            case "text": color = data.textColor; break;
-            case "category": color = data.categoryColor; break;
-            case "material": color = data.materialColor; break;
-            case "number": color = data.numberColor; break;
-        }
-
-        if (color == null || color.equals("NONE")) {
-            return getDefaultColor(colorType);
-        }
-
-        return "§" + ToggleCommand.getColorCode(color);
-    }
-
-    private static String getDefaultColor(String colorType) {
-        switch (colorType) {
-            case "text": return "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultTextColor());
-            case "category": return "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultCategoryColor());
-            case "material": return "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultMaterialColor());
-            case "number": return "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultNumberColor());
-            default: return "§r";
-        }
-    }
-
-    private static Text getTranslatedItemName(ServerPlayerEntity player, String itemId) {
+    private static Text getTranslatedItemName(ServerPlayerEntity player, String itemId, String statCategory) {
         try {
-            Item item = Registries.ITEM.get(Identifier.of(itemId));
-            return Text.translatable(item.getTranslationKey());
+            if (statCategory.equals("killed") || statCategory.equals("killed_by")) {
+                EntityType<?> entityType = Registries.ENTITY_TYPE.get(Identifier.tryParse(itemId));
+                if (entityType != null) {
+                    return Text.translatable(entityType.getTranslationKey());
+                }
+            }
+
+            Item item = Registries.ITEM.get(Identifier.tryParse(itemId));
+            if (item != null) {
+                return Text.translatable(item.getTranslationKey());
+            }
+
+            Block block = Registries.BLOCK.get(Identifier.tryParse(itemId));
+            if (block != null) {
+                return Text.translatable(block.getTranslationKey());
+            }
+
+            return Text.literal(itemId);
         } catch (Exception e) {
             return Text.literal(itemId);
         }
     }
 
+    private static String formatPlaytime(int ticks, ServerPlayerEntity player) {
+        int seconds = ticks / 20;
+        int minutes = seconds / 60;
+        int hours = minutes / 60;
+        int days = hours / 24;
+        int years = days / 365;
+
+        seconds %= 60;
+        minutes %= 60;
+        hours %= 24;
+        days %= 365;
+
+        StringBuilder sb = new StringBuilder();
+        String lang = ToggleRenderer.getPlayerLanguage(player);
+
+        if (years > 0) sb.append(years).append(ConfigReader.translate("time.years", lang)).append(" ");
+        if (days > 0) sb.append(days).append(ConfigReader.translate("time.days", lang)).append(" ");
+        if (hours > 0) sb.append(hours).append(ConfigReader.translate("time.hours", lang)).append(" ");
+        if (minutes > 0) sb.append(minutes).append(ConfigReader.translate("time.minutes", lang)).append(" ");
+        if (seconds > 0 || sb.length() == 0) {
+            sb.append(seconds).append(ConfigReader.translate("time.seconds", lang));
+        }
+
+        return sb.toString().trim();
+    }
+
+    public static TextColor parseColor(String colorCode) {
+        if (colorCode == null || colorCode.equalsIgnoreCase("NONE")) {
+            return TextColor.fromFormatting(Formatting.WHITE);
+        }
+
+        // Handle hex codes (with or without # prefix)
+        if (colorCode.matches("^[0-9a-fA-F]{6}$")) {
+            try {
+                return TextColor.fromRgb(Integer.parseInt(colorCode, 16));
+            } catch (NumberFormatException e) {
+                return TextColor.fromFormatting(Formatting.WHITE);
+            }
+        } else if (colorCode.startsWith("#") && colorCode.matches("^#[0-9a-fA-F]{6}$")) {
+            try {
+                return TextColor.fromRgb(Integer.parseInt(colorCode.substring(1), 16));
+            } catch (NumberFormatException e) {
+                return TextColor.fromFormatting(Formatting.WHITE);
+            }
+        }
+
+        // Handle Minecraft formatting codes
+        if (colorCode.startsWith("§")) {
+            Formatting formatting = Formatting.byCode(colorCode.charAt(1));
+            if (formatting != null && formatting.isColor()) {
+                return TextColor.fromFormatting(formatting);
+            }
+        } else if (colorCode.startsWith("&")) {
+            Formatting formatting = Formatting.byCode(colorCode.charAt(1));
+            if (formatting != null && formatting.isColor()) {
+                return TextColor.fromFormatting(formatting);
+            }
+        }
+
+        // Handle color names by converting to format code
+        Formatting formatting = Formatting.byName(colorCode.toUpperCase());
+        if (formatting != null && formatting.isColor()) {
+            return TextColor.fromFormatting(formatting);
+        }
+
+        return TextColor.fromFormatting(Formatting.WHITE);
+    }
+
+    public static String getPlayerColor(ServerPlayerEntity player, String colorType) {
+        PlayerToggleData data = getPlayerData(player);
+        if (data == null) {
+            return getDefaultColor(colorType);
+        }
+
+        String color = switch (colorType) {
+            case "text" -> data.textColor;
+            case "category" -> data.categoryColor;
+            case "material" -> data.materialColor;
+            case "number" -> data.numberColor;
+            case "time" -> data.timeColor;
+            default -> null;
+        };
+
+        if (color == null || color.equals("NONE")) {
+            return getDefaultColor(colorType);
+        }
+
+        if (color.startsWith("#") || color.equals("&")) {
+            return color;
+        }
+        return "§" + ToggleCommand.getColorCode(color);
+    }
+
+    private static String getDefaultColor(String colorType) {
+        return switch (colorType) {
+            case "text" -> "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultTextColor());
+            case "category" -> "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultCategoryColor());
+            case "material" -> "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultMaterialColor());
+            case "number" -> "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultNumberColor());
+            case "time" -> "§" + ToggleCommand.getColorCode(ConfigReader.getDefaultTimeColor());
+            default -> "§r";
+        };
+    }
+
+    public static String getPlayerLanguage(ServerPlayerEntity player) {
+        PlayerToggleData data = getPlayerData(player);
+        return data != null && data.language != null ? data.language : ConfigReader.getDefaultLanguage();
+    }
+
     private static int getStatCount(ServerPlayerEntity player, String itemName, String statCategory) {
         try {
-            Identifier id = Identifier.of(itemName);
+            Identifier id = Identifier.tryParse(itemName);
+            if (id == null) return 0;
+
+            if (statCategory.equals("killed") || statCategory.equals("killed_by")) {
+                EntityType<?> entityType = Registries.ENTITY_TYPE.get(id);
+                if (entityType != null) {
+                    Stat<?> stat = statCategory.equals("killed")
+                            ? Stats.KILLED.getOrCreateStat(entityType)
+                            : Stats.KILLED_BY.getOrCreateStat(entityType);
+                    return player.getStatHandler().getStat(stat);
+                }
+                return 0;
+            }
+
             Item item = Registries.ITEM.get(id);
-            if (item == null) return 0;
+            if (item != null) {
+                Stat<?> stat = switch (statCategory) {
+                    case "mined" -> {
+                        Block block = Block.getBlockFromItem(item);
+                        yield block != null ? Stats.MINED.getOrCreateStat(block) : null;
+                    }
+                    case "crafted" -> Stats.CRAFTED.getOrCreateStat(item);
+                    case "used" -> Stats.USED.getOrCreateStat(item);
+                    case "broken" -> Stats.BROKEN.getOrCreateStat(item);
+                    case "picked_up" -> Stats.PICKED_UP.getOrCreateStat(item);
+                    case "dropped" -> Stats.DROPPED.getOrCreateStat(item);
+                    default -> null;
+                };
+                return stat != null ? player.getStatHandler().getStat(stat) : 0;
+            }
 
-            Stat<?> stat = switch (statCategory) {
-                case "mined" -> Stats.MINED.getOrCreateStat(Block.getBlockFromItem(item));
-                case "crafted" -> Stats.CRAFTED.getOrCreateStat(item);
-                case "used" -> Stats.USED.getOrCreateStat(item);
-                case "broken" -> Stats.BROKEN.getOrCreateStat(item);
-                case "picked_up" -> Stats.PICKED_UP.getOrCreateStat(item);
-                case "dropped" -> Stats.DROPPED.getOrCreateStat(item);
-                default -> null;
-            };
+            Block block = Registries.BLOCK.get(id);
+            if (block != null && statCategory.equals("mined")) {
+                return player.getStatHandler().getStat(Stats.MINED.getOrCreateStat(block));
+            }
 
-            return stat != null ? player.getStatHandler().getStat(stat) : 0;
+            return 0;
         } catch (Exception e) {
             return 0;
         }
@@ -239,6 +311,11 @@ public class ToggleRenderer {
         if (data == null || data.toggleItem == null || data.location == null) {
             return false;
         }
+
+        if (!ToggleCommand.isToggleAllowed(data.toggleItem)) {
+            return false;
+        }
+
         if (data.toggleItem.equals("timeplayed") && !data.location.equals("actionbar")) {
             return false;
         }
@@ -271,6 +348,7 @@ public class ToggleRenderer {
             if (json.has("category_color")) data.categoryColor = json.get("category_color").getAsString();
             if (json.has("material_color")) data.materialColor = json.get("material_color").getAsString();
             if (json.has("number_color")) data.numberColor = json.get("number_color").getAsString();
+            if (json.has("time_color")) data.timeColor = json.get("time_color").getAsString();
             if (json.has("language")) data.language = json.get("language").getAsString();
 
             playerDataCache.put(playerId, data);

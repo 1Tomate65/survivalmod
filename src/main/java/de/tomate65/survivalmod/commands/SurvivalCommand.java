@@ -26,10 +26,13 @@ public class SurvivalCommand {
 
     public static void register() {
         loadConfig();
-        CommandRegistrationCallback.EVENT.register((dispatcher, dispatcher2, dispatcher3) -> registerCommands(dispatcher));
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            registerCommands(dispatcher);
+        });
     }
 
-    private static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
+    public static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
+        // Main command with reload subcommand
         dispatcher.register(
                 literal("survival")
                         .then(literal("reload")
@@ -38,15 +41,18 @@ public class SurvivalCommand {
                                     loadConfig();
                                     context.getSource().sendFeedback(() -> Text.literal("§7Configuration reloaded."), false);
                                     return 1;
-                                }))
+                                })
+                        )
                         .executes(SurvivalCommand::listAvailableCommands)
         );
 
+        // Register all subcommands from config
         for (String subcommand : subcommands.keySet()) {
             dispatcher.register(
                     literal("survival")
-                            .then(literal(subcommand).executes(context -> executeSubcommand(context, subcommand)))
-            );
+                            .then(literal(subcommand)
+                                    .executes(context -> executeSubcommand(context, subcommand))
+                            ));
         }
     }
 
@@ -55,6 +61,7 @@ public class SurvivalCommand {
             System.err.println("§cConfiguration file does not exist: " + CONFIG_FILE.getPath());
             return;
         }
+
         try (FileReader reader = new FileReader(CONFIG_FILE)) {
             JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
             JsonObject commands = config.getAsJsonObject("commands");
@@ -82,6 +89,7 @@ public class SurvivalCommand {
             source.sendError(Text.literal("No content available for this subcommand."));
             return 1;
         }
+
         context.getSource().sendFeedback(() -> Text.literal("§aSurvival §b" + subcommand + "§7:§r"), false);
         for (String message : messages) {
             context.getSource().sendFeedback(() -> Text.literal(message), false);
@@ -96,6 +104,7 @@ public class SurvivalCommand {
             source.sendError(Text.literal("No subcommands available. Check your configuration."));
             return 1;
         }
+
         context.getSource().sendFeedback(() -> Text.literal("Available subcommands:"), false);
         for (String subcommand : subcommands.keySet()) {
             context.getSource().sendFeedback(() -> Text.literal("§7/§asurvival §b" + subcommand), false);
