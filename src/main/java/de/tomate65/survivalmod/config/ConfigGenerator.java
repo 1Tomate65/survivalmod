@@ -51,9 +51,11 @@ public class ConfigGenerator {
                 survival.add("changelog", createStringArray(
                         "§7§l§nChangelog",
                         "",
-                        "§7-§r §aFix Color Command again",
-                        "§7-§r §aChanged command feedback to be translatable through the toggle command",
-                        "§7-§r §aAdded Chines, Hindu, Pirat Speak and Russian as a translation"
+                        "§7-§r §aAdd the Magnet to the Toggle Command",
+                        "§7-§r §aAdd two more languages:",
+                        "§7>> §aItalien & Turkish",
+                        "§7-§r §aRemade the Translation Part",
+                        "For more details read the modrinth changelog"
                 ));
 
                 commands.add("survival", survival);
