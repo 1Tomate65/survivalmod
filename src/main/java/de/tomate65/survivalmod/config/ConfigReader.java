@@ -1,6 +1,8 @@
 package de.tomate65.survivalmod.config;
 
 import com.google.gson.*;
+import de.tomate65.survivalmod.manager.MagnetManager;
+
 import java.io.*;
 import java.util.*;
 
@@ -49,6 +51,15 @@ public class ConfigReader {
             defaultMaterialColor = config.get("default_material_color").getAsString();
             defaultNumberColor = config.get("default_number_color").getAsString();
             defaultTimeColor = config.get("default_time_color").getAsString();
+
+
+
+            // Load magnet settings
+            JsonObject magnetSettings = config.has("magnet") ? config.getAsJsonObject("magnet") : new JsonObject();
+            boolean allowMagnet = magnetSettings.has("enabled") && magnetSettings.get("enabled").getAsBoolean();
+            int hungerStrength = magnetSettings.has("hungerStrength") ? magnetSettings.get("hungerStrength").getAsInt() : 5;
+            int radius = magnetSettings.has("radius") ? magnetSettings.get("radius").getAsInt() : 5;
+            MagnetManager.setConfigValues(allowMagnet, hungerStrength, radius);
 
         } catch (Exception e) {
             System.err.println("Error reading conf config: " + e.getMessage());

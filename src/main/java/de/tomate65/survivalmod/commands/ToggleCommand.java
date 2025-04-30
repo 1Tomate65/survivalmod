@@ -2,11 +2,13 @@ package de.tomate65.survivalmod.commands;
 
 import com.google.gson.*;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.tomate65.survivalmod.config.ConfigGenerator;
 import de.tomate65.survivalmod.config.ConfigReader;
+import de.tomate65.survivalmod.manager.MagnetManager;
 import de.tomate65.survivalmod.togglerenderer.ToggleRenderer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.ServerCommandSource;
@@ -31,7 +33,7 @@ public class ToggleCommand {
     private static String defaultStatCategory = "mined";
 
     private static final String[] MATERIAL_CATEGORIES = {"Mobs", "Blocks", "Items", "All"};
-    private static final String[] STAT_CATEGORIES = {
+    public static final String[] STAT_CATEGORIES = {
             "mined", "crafted", "used", "broken", "picked_up", "dropped",
             "killed", "killed_by", "custom"
     };
@@ -42,8 +44,7 @@ public class ToggleCommand {
             "WHITE", "BROWN", "NONE"
     };
 
-    private static final SuggestionProvider<ServerCommandSource> LANGUAGE_SUGGESTIONS =
-            (context, builder) -> {
+    private static final SuggestionProvider<ServerCommandSource> LANGUAGE_SUGGESTIONS = (context, builder) -> {
                 ConfigReader.getAvailableLanguages().forEach(builder::suggest);
                 return CompletableFuture.completedFuture(builder.build());
             };
@@ -54,6 +55,170 @@ public class ToggleCommand {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             registerCommands(dispatcher);
         });
+    }
+
+    private static int clearPlayerConfig(CommandContext<ServerCommandSource> context, String type) {
+        ServerPlayerEntity player = getPlayerOrError(context);
+        if (player == null) return 0;
+
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
+
+        if (!playerFile.exists()) {
+            sendFeedback(context, "command.reset_none");
+            return 1;
+        }
+
+        try {
+            JsonObject playerData;
+            try (FileReader reader = new FileReader(playerFile)) {
+                playerData = JsonParser.parseReader(reader).getAsJsonObject();
+            }
+
+            // Keep essential data
+            JsonObject newData = new JsonObject();
+            newData.addProperty("uuid", playerId.toString());
+            newData.addProperty("playername", player.getName().getString());
+
+            // Preserve magnet state if not clearing everything
+            if (!type.equals("all") && playerData.has("magnet_enabled")) {
+                newData.addProperty("magnet_enabled", playerData.get("magnet_enabled").getAsBoolean());
+            }
+
+            // Handle specific clear types
+            switch (type) {
+                case "all":
+                    // Already handled by keeping only uuid and name
+                    break;
+                case "colors":
+                    // Keep everything except colors
+                    copyPropertyIfExists(playerData, newData, "toggle");
+                    copyPropertyIfExists(playerData, newData, "toggle_location");
+                    copyPropertyIfExists(playerData, newData, "stat_category");
+                    copyPropertyIfExists(playerData, newData, "language");
+                    copyPropertyIfExists(playerData, newData, "magnet_enabled");
+                    break;
+                // Add other cases as needed
+            }
+
+            try (FileWriter writer = new FileWriter(playerFile)) {
+                new GsonBuilder().setPrettyPrinting().create().toJson(newData, writer);
+            }
+
+            ToggleRenderer.clearCache(playerId);
+            sendFeedback(context, "command.reset_success");
+            return 1;
+        } catch (Exception e) {
+            sendError(context, player, "command.reset_failed");
+            return 0;
+        }
+    }
+
+    /*private static void sendFeedback(CommandContext<ServerCommandSource> context, ServerPlayerEntity player, String translationKey, String... args) {
+        String lang = ToggleRenderer.getPlayerLanguage(player);
+        String message = ConfigReader.translate(translationKey, lang);
+        if (args.length > 0) {
+            message = String.format(message, (Object[]) args);
+        }
+        context.getSource().sendFeedback(() ->
+                        Text.literal(message).styled(style -> style.withColor(Formatting.GREEN)),
+                false
+        );
+    }*/
+
+    private static void sendFeedback(CommandContext<ServerCommandSource> context, String translationKey, String... args) {
+        String message = ConfigReader.translate(translationKey, ConfigReader.getDefaultLanguage());
+        if (args.length > 0) {
+            message = String.format(message, (Object[]) args);
+        }
+        String finalMessage = message;
+        context.getSource().sendFeedback(() ->
+                        Text.literal(finalMessage).styled(style -> style.withColor(Formatting.GREEN)),
+                false
+        );
+    }
+
+    private static void sendError(CommandContext<ServerCommandSource> context, ServerPlayerEntity player, String translationKey, String... args) {
+        String lang = ToggleRenderer.getPlayerLanguage(player);
+        String message = ConfigReader.translate(translationKey, lang);
+        if (args.length > 0) {
+            message = String.format(message, (Object[]) args);
+        }
+        context.getSource().sendError(Text.literal(message));
+    }
+
+
+    private static void copyPropertyIfExists(JsonObject source, JsonObject target, String property) {
+        if (source.has(property)) {
+            target.add(property, source.get(property));
+        }
+    }
+
+    private static int clearPlayerConfigWithType(CommandContext<ServerCommandSource> context, String type) {
+        ServerPlayerEntity player = getPlayerOrError(context);
+        if (player == null) return 0;
+
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
+
+        if (!playerFile.exists()) {
+            context.getSource().sendFeedback(() ->
+                    Text.literal(ConfigReader.translate("command.reset_none",
+                                    ToggleRenderer.getPlayerLanguage(player)))
+                            .styled(style -> style.withColor(Formatting.GREEN)), false);
+            return 1;
+        }
+
+        try {
+            JsonObject playerData;
+            try (FileReader reader = new FileReader(playerFile)) {
+                playerData = JsonParser.parseReader(reader).getAsJsonObject();
+            }
+
+            switch (type) {
+                case "color":
+                    playerData.remove("text_color");
+                    playerData.remove("category_color");
+                    playerData.remove("material_color");
+                    playerData.remove("number_color");
+                    playerData.remove("time_color");
+                    break;
+                case "toggle":
+                    playerData.remove("toggle");
+                    break;
+                case "toggle_location":
+                    playerData.remove("toggle_location");
+                    break;
+                case "stat_category":
+                    playerData.remove("stat_category");
+                    break;
+                case "language":
+                    playerData.remove("language");
+                    break;
+                default:
+                    // For specific color types
+                    if (type.startsWith("color_")) {
+                        String colorType = type.substring(6);
+                        playerData.remove(colorType + "_color");
+                    }
+                    break;
+            }
+
+            try (FileWriter writer = new FileWriter(playerFile)) {
+                new GsonBuilder().setPrettyPrinting().create().toJson(playerData, writer);
+            }
+
+            ToggleRenderer.clearCache(playerId);
+            context.getSource().sendFeedback(() ->
+                    Text.literal(String.format(ConfigReader.translate("command.reset_partial",
+                                    ToggleRenderer.getPlayerLanguage(player)), type))
+                            .styled(style -> style.withColor(Formatting.GREEN)), false);
+            return 1;
+        } catch (Exception e) {
+            context.getSource().sendError(Text.literal(ConfigReader.translate("command.reset_failed",
+                    ToggleRenderer.getPlayerLanguage(player))));
+            return 0;
+        }
     }
 
     private static void loadConfig() {
@@ -100,8 +265,66 @@ public class ToggleCommand {
     public static void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(literal("toggle")
                 .executes(ToggleCommand::showToggleUsage)
+                .then(literal("set")
+                        .executes(context -> showSetUsage(context))
+                        .then(literal("object")
+                                .then(argument("item", StringArgumentType.string())
+                                        .suggests((context, builder) -> {
+                                            Set<String> allToggles = getAllAvailableToggles();
+                                            allToggles.forEach(builder::suggest);
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(context -> setPlayerProperty(
+                                                context,
+                                                "toggle",
+                                                StringArgumentType.getString(context, "item")
+                                        ))
+                                ))
+                        .then(literal("location")
+                                .then(argument("location", StringArgumentType.string())
+                                      .suggests((context, builder) -> {
+                                         builder.suggest("actionbar");
+                                       builder.suggest("chat");
+                                       builder.suggest("title");
+                                       return builder.buildFuture();
+                                       })
+                                       .executes(context -> setPlayerProperty(
+                                       context,
+                                       "toggle_location",
+                                       StringArgumentType.getString(context, "location")))
+                                        ))
+                        .then(literal("category")
+                                .then(argument("category", StringArgumentType.string())
+                                        .suggests((context, builder) -> {
+                                         for (String category : STAT_CATEGORIES) {
+                                         builder.suggest(category);
+                                         }
+                                                            return builder.buildFuture();
+                                         })
+                                         .executes(context -> setPlayerProperty(
+                                         context,
+                                         "stat_category",
+                                         StringArgumentType.getString(context, "category"))))))
                 .then(literal("clear")
-                        .executes(ToggleCommand::clearPlayerConfig))
+                        .executes(ToggleCommand::clearPlayerConfig)
+                        .then(literal("color")
+                                .executes(context -> clearPlayerConfigWithType(context, "color"))
+                                .then(literal("text")
+                                        .executes(context -> clearPlayerConfigWithType(context, "color_text")))
+                                .then(literal("category")
+                                        .executes(context -> clearPlayerConfigWithType(context, "color_category")))
+                                .then(literal("material")
+                                        .executes(context -> clearPlayerConfigWithType(context, "color_material")))
+                                .then(literal("number")
+                                        .executes(context -> clearPlayerConfigWithType(context, "color_number")))
+                                .then(literal("time")
+                                        .executes(context -> clearPlayerConfigWithType(context, "color_time"))))
+                        .then(literal("toggles")
+                                .executes(context -> clearPlayerConfigWithType(context, "toggle")))
+                        .then(literal("location")
+                                 .executes(context -> clearPlayerConfigWithType(context, "toggle_location")))
+                        .then(literal("stat_category")
+                                .executes(context -> clearPlayerConfigWithType(context, "stat_category"))))
                 .then(literal("help")
                         .executes(context -> showGeneralHelp(context))
                         .then(literal("materials")
@@ -109,16 +332,26 @@ public class ToggleCommand {
                         .then(literal("color")
                                 .executes(context -> showColorHelp(context)))
                         .then(literal("clear")
-                                .executes(context -> showClearHelp(context)))
+                                .then(literal("toggle")
+                                        .executes(context -> clearPlayerConfigWithType(context, "toggle")))
+                                .then(literal("language")
+                                        .executes(context -> clearPlayerConfigWithType(context, "language"))))
                         .then(literal("language")
                                 .executes(context -> showLanguageHelp(context))))
                 .then(literal("color")
                         .executes(context -> showColorUsage(context)))
-                .then(literal("language")
-                        .executes(context -> showLanguageUsage(context))
-                        .then(argument("lang", StringArgumentType.word())
-                                .suggests(LANGUAGE_SUGGESTIONS)
-                                .executes(context -> setPlayerLanguage(context, StringArgumentType.getString(context, "lang"))))));
+                .then(literal("magnet")
+                        .executes(context -> showMagnetUsage(context))
+                        .then(argument("state", BoolArgumentType.bool())
+                                .executes(context -> setMagnetState(
+                                        context,
+                                        BoolArgumentType.getBool(context, "state")
+                                ))))
+                        .then(literal("language")
+                                .executes(context -> showLanguageUsage(context))
+                                .then(argument("lang", StringArgumentType.word())
+                                        .suggests(LANGUAGE_SUGGESTIONS)
+                                        .executes(context -> setPlayerLanguage(context, StringArgumentType.getString(context, "lang"))))));
 
         Set<String> togglesToRegister = ConfigReader.isInvertedToggleMode() ?
                 new HashSet<>(getAllAvailableToggles()) {{
@@ -128,6 +361,191 @@ public class ToggleCommand {
 
         togglesToRegister.forEach(toggle -> registerToggleCommand(dispatcher, toggle));
         registerColorCommands(dispatcher);
+    }
+
+    private static int setPlayerProperty(CommandContext<ServerCommandSource> context, String property, String value) {
+        ServerPlayerEntity player = getPlayerOrError(context);
+        if (player == null) return 0;
+
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
+
+        try {
+            PLAYERDATA_DIR.mkdirs();
+            JsonObject playerData = new JsonObject();
+
+            if (playerFile.exists()) {
+                try (FileReader reader = new FileReader(playerFile)) {
+                    playerData = JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+
+            // Special handling for toggle property to ensure proper formatting
+            if (property.equals("toggle")) {
+                if (!isToggleAllowed(value)) {
+                    String mode = ConfigReader.isInvertedToggleMode() ? "blocklist" : "allowlist";
+                    context.getSource().sendError(Text.literal(String.format(ConfigReader.translate("command.invalid_toggle",
+                            ToggleRenderer.getPlayerLanguage(player)), mode)));
+                    return 0;
+                }
+
+                // Ensure we're using the correct format for the toggle (with namespace)
+                if (!value.contains(":")) {
+                    value = "minecraft:" + value;
+                }
+            }
+
+            // Special handling for stat_category to validate
+            if (property.equals("stat_category") && !Arrays.asList(STAT_CATEGORIES).contains(value)) {
+                context.getSource().sendError(Text.literal(String.format(ConfigReader.translate("command.invalid_stat_category",
+                        ToggleRenderer.getPlayerLanguage(player)))));
+                return 0;
+            }
+
+            // Special handling for toggle_location to validate
+            if (property.equals("toggle_location") &&
+                    !Arrays.asList("actionbar", "chat", "title").contains(value)) {
+                context.getSource().sendError(Text.literal(String.format(ConfigReader.translate("command.invalid_location",
+                        ToggleRenderer.getPlayerLanguage(player)))));
+                return 0;
+            }
+
+            playerData.addProperty(property, value);
+            playerData.addProperty("uuid", playerId.toString());
+            playerData.addProperty("playername", player.getName().getString());
+
+            try (FileWriter writer = new FileWriter(playerFile)) {
+                new GsonBuilder().setPrettyPrinting().create().toJson(playerData, writer);
+            }
+
+            ToggleRenderer.clearCache(playerId);
+
+            String lang = ToggleRenderer.getPlayerLanguage(player);
+            String message = String.format(ConfigReader.translate("command.set_success", lang),
+                    property, value);
+
+            context.getSource().sendFeedback(() ->
+                            Text.literal(message).styled(style -> style.withColor(Formatting.GREEN)),
+                    false);
+            return 1;
+        } catch (IOException | JsonParseException e) {
+            System.err.println("Error setting player property: " + e.getMessage());
+            context.getSource().sendError(Text.literal(String.format(ConfigReader.translate("command.error_saving",
+                    ToggleRenderer.getPlayerLanguage(player)), property)));
+            return 0;
+        }
+    }
+
+    // Add this method to show set command usage
+    private static int showSetUsage(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = getPlayerOrError(context);
+        if (player == null) return 0;
+
+        String lang = ToggleRenderer.getPlayerLanguage(player);
+
+        sendFormattedMessage(context, player, "command.set_usage.title", Formatting.GOLD);
+        sendFormattedMessage(context, player, "command.set_usage.object", Formatting.GREEN);
+        sendFormattedMessage(context, player, "command.set_usage.location", Formatting.GREEN);
+        sendFormattedMessage(context, player, "command.set_usage.category", Formatting.GREEN);
+
+        return 1;
+    }
+
+    private static int clearPlayerConfig(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity player = getPlayerOrError(context);
+        if (player == null) return 0;
+
+        UUID playerId = player.getUuid();
+        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
+
+        if (!playerFile.exists()) {
+            sendFeedback(context, "command.reset_none");
+            return 1;
+        }
+
+        try {
+            // Create new config with only essential data
+            JsonObject newData = new JsonObject();
+            newData.addProperty("uuid", playerId.toString());
+            newData.addProperty("playername", player.getName().getString());
+
+            try (FileWriter writer = new FileWriter(playerFile)) {
+                new GsonBuilder().setPrettyPrinting().create().toJson(newData, writer);
+            }
+
+            ToggleRenderer.clearCache(playerId);
+            sendFeedback(context, "command.reset_success");
+            return 1;
+        } catch (Exception e) {
+            sendError(context, player, "command.reset_failed");
+            return 0;
+        }
+    }
+
+    private static int showMagnetUsage(CommandContext<ServerCommandSource> context) {
+        if (!MagnetManager.isMagnetAllowed()) {
+            context.getSource().sendError(Text.literal(ConfigReader.translate("command.disabled",
+                    ConfigReader.getDefaultLanguage())));
+            return 0;
+        }
+
+        context.getSource().sendFeedback(() ->
+                Text.literal(String.format(ConfigReader.translate("command.usage",
+                                ConfigReader.getDefaultLanguage()), "/toggle magnet <true|false>"))
+                        .styled(style -> style.withColor(Formatting.GRAY)), false);
+        return 1;
+    }
+
+    private static int setMagnetState(CommandContext<ServerCommandSource> context, boolean state) {
+        ServerPlayerEntity player = getPlayerOrError(context);
+        if (player == null) return 0;
+
+        if (!MagnetManager.isMagnetAllowed()) {
+            context.getSource().sendError(Text.literal(ConfigReader.translate("command.disabled",
+                    ToggleRenderer.getPlayerLanguage(player))));
+            return 0;
+        }
+
+        boolean currentState = MagnetManager.getMagnetState(player.getUuid());
+        String lang = ToggleRenderer.getPlayerLanguage(player);
+
+        // Check if we're trying to change to the same state
+        if (currentState == state) {
+            String messageKey = state ? "magnet.already_active" : "magnet.already_inactive";
+            TextColor textColor = ToggleRenderer.parseColor(ToggleRenderer.getPlayerColor(player, "text"));
+
+            context.getSource().sendFeedback(() ->
+                            Text.literal(ConfigReader.translate(messageKey, lang))
+                                    .styled(style -> style.withColor(textColor)),
+                    false);
+            return 1;
+        }
+
+        MagnetManager.setMagnetState(player, state);
+
+        if (state) {
+            double scale = MagnetManager.getPlayerScale(player);
+            int effectiveRadius = (int) Math.round(MagnetManager.getBaseRadius() * scale);
+            TextColor textColor = ToggleRenderer.parseColor(ToggleRenderer.getPlayerColor(player, "text"));
+
+            String message = String.format(
+                    ConfigReader.translate("magnet.activated", lang),
+                    effectiveRadius
+            );
+
+            context.getSource().sendFeedback(() ->
+                            Text.literal(message)
+                                    .styled(style -> style.withColor(textColor)),
+                    false);
+        } else {
+            TextColor textColor = ToggleRenderer.parseColor(ToggleRenderer.getPlayerColor(player, "text"));
+
+            context.getSource().sendFeedback(() ->
+                            Text.literal(ConfigReader.translate("magnet.deactivated", lang))
+                                    .styled(style -> style.withColor(textColor)),
+                    false);
+        }
+        return 1;
     }
 
     private static int showToggleUsage(CommandContext<ServerCommandSource> context) {
@@ -575,6 +993,11 @@ public class ToggleCommand {
             return 0;
         }
 
+        // Validate stat category
+        if (!Arrays.asList(STAT_CATEGORIES).contains(statCategory)) {
+            statCategory = defaultStatCategory;
+        }
+
         UUID playerId = player.getUuid();
         File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
 
@@ -588,9 +1011,17 @@ public class ToggleCommand {
                 }
             }
 
+            // Ensure we're using the correct format for the toggle (with namespace)
+            String formattedToggle;
+            if (!toggle.contains(":")) {
+                formattedToggle = "minecraft:" + toggle;
+            } else {
+                formattedToggle = toggle;
+            }
+
             playerData.addProperty("uuid", playerId.toString());
             playerData.addProperty("playername", player.getName().getString());
-            playerData.addProperty("toggle", toggle);
+            playerData.addProperty("toggle", formattedToggle);
             playerData.addProperty("toggle_location", location);
             playerData.addProperty("stat_category", statCategory);
 
@@ -599,49 +1030,20 @@ public class ToggleCommand {
             }
 
             ToggleRenderer.clearCache(playerId);
+            String finalStatCategory = statCategory;
             context.getSource().sendFeedback(() ->
                     Text.literal(String.format(ConfigReader.translate("toggle.set",
-                                    ToggleRenderer.getPlayerLanguage(player)), toggle, location, statCategory))
+                                    ToggleRenderer.getPlayerLanguage(player)), formattedToggle, location, finalStatCategory))
                             .styled(style -> style.withColor(Formatting.GREEN)), false);
             return 1;
         } catch (IOException | JsonParseException e) {
             System.err.println("Error handling player toggle settings: " + e.getMessage());
             context.getSource().sendError(Text.literal(String.format(ConfigReader.translate("command.error_saving",
                     ToggleRenderer.getPlayerLanguage(player)), "toggle")));
-            return 1;
-        }
-    }
-
-    private static int clearPlayerConfig(CommandContext<ServerCommandSource> context) {
-        ServerPlayerEntity player = getPlayerOrError(context);
-        if (player == null) return 0;
-
-        UUID playerId = player.getUuid();
-        File playerFile = new File(PLAYERDATA_DIR, playerId.toString() + ".json");
-
-        ToggleRenderer.clearCache(playerId);
-
-        if (playerFile.exists() && playerFile.delete()) {
-            player.sendMessage(Text.empty(), true);
-            context.getSource().sendFeedback(() ->
-                    Text.literal(ConfigReader.translate("command.reset_success",
-                                    ToggleRenderer.getPlayerLanguage(player)))
-                            .styled(style -> style.withColor(Formatting.GREEN)), false);
-            return 1;
-        }
-
-        if (playerFile.exists()) {
-            context.getSource().sendError(Text.literal(ConfigReader.translate("command.reset_failed",
-                    ToggleRenderer.getPlayerLanguage(player))));
             return 0;
-        } else {
-            context.getSource().sendFeedback(() ->
-                    Text.literal(ConfigReader.translate("command.reset_none",
-                                    ToggleRenderer.getPlayerLanguage(player)))
-                            .styled(style -> style.withColor(Formatting.GREEN)), false);
-            return 1;
         }
     }
+
 
     private static Set<String> getAllItemIds() {
         Set<String> ids = new HashSet<>();

@@ -25,10 +25,10 @@ public class ToggleRenderer {
     private static final Map<UUID, PlayerToggleData> playerDataCache = new HashMap<>();
     private static final Map<UUID, Integer> lastMilestoneReached = new HashMap<>();
 
-    private static class PlayerToggleData {
-        String toggleItem;
-        String location;
-        String statCategory;
+    public static class PlayerToggleData {
+        public String toggleItem;
+        public String location;
+        public String statCategory;
         String textColor;
         String categoryColor;
         String materialColor;
@@ -265,7 +265,11 @@ public class ToggleRenderer {
     private static int getStatCount(ServerPlayerEntity player, String itemName, String statCategory) {
         try {
             Identifier id = Identifier.tryParse(itemName);
-            if (id == null) return 0;
+            if (id == null) {
+                // Try with minecraft: prefix if not present
+                id = Identifier.tryParse("minecraft:" + itemName);
+                if (id == null) return 0;
+            }
 
             if (statCategory.equals("killed") || statCategory.equals("killed_by")) {
                 EntityType<?> entityType = Registries.ENTITY_TYPE.get(id);
@@ -302,6 +306,7 @@ public class ToggleRenderer {
 
             return 0;
         } catch (Exception e) {
+            System.err.println("Error getting stat count for " + itemName + ": " + e.getMessage());
             return 0;
         }
     }
@@ -316,10 +321,29 @@ public class ToggleRenderer {
             return false;
         }
 
-        if (data.toggleItem.equals("timeplayed") && !data.location.equals("actionbar")) {
+        // Special case for timeplayed
+        if (data.toggleItem.equals("timeplayed")) {
+            return data.location.equals("actionbar");
+        }
+
+        // For other toggles, ensure we have a valid stat category
+        if (data.statCategory == null || !Arrays.asList(ToggleCommand.STAT_CATEGORIES).contains(data.statCategory)) {
             return false;
         }
-        return data.toggleItem.equals("timeplayed") || data.statCategory != null;
+
+        // Check if the item/block/entity exists
+        try {
+            Identifier id = Identifier.tryParse(data.toggleItem);
+            if (id == null) return false;
+
+            if (data.statCategory.equals("killed") || data.statCategory.equals("killed_by")) {
+                return Registries.ENTITY_TYPE.containsId(id);
+            }
+
+            return Registries.ITEM.containsId(id) || Registries.BLOCK.containsId(id);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public static void clearCache(UUID playerId) {
@@ -327,7 +351,7 @@ public class ToggleRenderer {
         lastMilestoneReached.remove(playerId);
     }
 
-    private static PlayerToggleData getPlayerData(ServerPlayerEntity player) {
+    public static PlayerToggleData getPlayerData(ServerPlayerEntity player) {
         UUID playerId = player.getUuid();
 
         if (playerDataCache.containsKey(playerId)) {
