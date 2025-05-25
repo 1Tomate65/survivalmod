@@ -1,0 +1,133 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 5,
+      "bonus_rolls": {
+        "min": 0,
+        "max": 4
+      },
+      "entries": [
+        {
+          "type": "minecraft:group",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:cobbled_deepslate",
+              "weight": 4,
+              "functions": [
+                {
+                  "function": "minecraft:limit_count",
+                  "limit": {
+                    "min": 2,
+                    "max": 5
+                  }
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:tuff",
+              "weight": 4,
+              "functions": [
+                {
+                  "function": "minecraft:limit_count",
+                  "limit": {
+                    "min": 2,
+                    "max": 7
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "minecraft:group",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:rotten_flesh",
+              "weight": 3,
+              "functions": [
+                {
+                  "function": "minecraft:limit_count",
+                  "limit": {
+                    "min": 3,
+                    "max": 6
+                  }
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:bone",
+              "weight": 3,
+              "functions": [
+                {
+                  "function": "minecraft:limit_count",
+                  "limit": {
+                    "min": 2,
+                    "max": 5
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "minecraft:group",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:stone_pickaxe",
+              "weight": 2,
+              "functions": [
+                {
+                  "function": "minecraft:enchant_randomly",
+                  "options": [
+                    "minecraft:efficiency",
+                    "minecraft:unbreaking",
+                    "minecraft:fortune",
+                    "minecraft:silk_touch"
+                  ],
+                  "conditions": []
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:iron_pickaxe",
+              "weight": 1,
+              "functions": [
+                {
+                  "function": "minecraft:enchant_randomly",
+                  "options": [
+                    "minecraft:efficiency",
+                    "minecraft:unbreaking",
+                    "minecraft:fortune",
+                    "minecraft:silk_touch"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:skeleton_skull",
+              "weight": 1,
+              "functions": [
+                {
+                  "function": "minecraft:limit_count",
+                  "limit": {
+                    "min": 1,
+                    "max": 2
+                  }
+                }
+              ],
+              "conditions": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

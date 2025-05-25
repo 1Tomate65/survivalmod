@@ -20,6 +20,7 @@ import net.minecraft.util.Formatting;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static de.tomate65.survivalmod.togglerenderer.ToggleRenderer.getPlayerColor;
 import static net.minecraft.server.command.CommandManager.*;
@@ -45,9 +46,11 @@ public class ToggleCommand {
     };
 
     private static final SuggestionProvider<ServerCommandSource> LANGUAGE_SUGGESTIONS = (context, builder) -> {
-                ConfigReader.getAvailableLanguages().forEach(builder::suggest);
-                return CompletableFuture.completedFuture(builder.build());
-            };
+        ConfigReader.getAvailableLanguages().stream()
+                .filter(ConfigReader::isLanguageEnabled)
+                .forEach(builder::suggest);
+        return CompletableFuture.completedFuture(builder.build());
+    };
 
     public static void register() {
         loadConfig();
@@ -638,8 +641,9 @@ public class ToggleCommand {
         sendFormattedMessage(context, player, "help.language.title", Formatting.GOLD);
         sendFormattedMessage(context, player, "help.language.available", Formatting.GRAY);
 
-        ConfigReader.getAvailableLanguages().forEach(lang ->
-                context.getSource().sendFeedback(() ->
+        ConfigReader.getAvailableLanguages().stream()
+                .filter(ConfigReader::isLanguageEnabled)
+                .forEach(lang -> context.getSource().sendFeedback(() ->
                         Text.literal("- " + lang).styled(style -> style.withColor(Formatting.AQUA)), false));
 
         sendFormattedMessage(context, player, "help.language.change", Formatting.GRAY);
@@ -675,9 +679,13 @@ public class ToggleCommand {
     }
 
     private static int showLanguageUsage(CommandContext<ServerCommandSource> context) {
+        String enabledLanguages = ConfigReader.getAvailableLanguages().stream()
+                .filter(ConfigReader::isLanguageEnabled)
+                .collect(Collectors.joining(", "));
+
         context.getSource().sendFeedback(() ->
-                Text.literal(String.format(ConfigReader.translate("command.available_languages", ConfigReader.getDefaultLanguage()),
-                                String.join(", ", ConfigReader.getAvailableLanguages())))
+                Text.literal(String.format(ConfigReader.translate("command.available_languages",
+                                ConfigReader.getDefaultLanguage()), enabledLanguages))
                         .styled(style -> style.withColor(Formatting.GRAY)), false);
         return 1;
     }
@@ -773,6 +781,13 @@ public class ToggleCommand {
 
         if (!ConfigReader.getAvailableLanguages().contains(language)) {
             context.getSource().sendError(Text.literal(ConfigReader.translate("command.invalid_language",
+                    ToggleRenderer.getPlayerLanguage(player))));
+            return 0;
+        }
+
+        // Add check for enabled language
+        if (!ConfigReader.isLanguageEnabled(language)) {
+            context.getSource().sendError(Text.literal(ConfigReader.translate("command.language_disabled",
                     ToggleRenderer.getPlayerLanguage(player))));
             return 0;
         }

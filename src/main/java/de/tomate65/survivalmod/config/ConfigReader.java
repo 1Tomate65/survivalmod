@@ -14,6 +14,8 @@ public class ConfigReader {
     private static boolean toggleCommandEnabled = true;
     private static boolean invertToggleFile = false;
     private static int chatMsgFrequency = 10;
+    private static String modVersion = "0.3.0";
+    private static final Map<String, Boolean> languageToggles = new HashMap<>();
     private static String defaultStatCategory = "mined";
     private static String defaultLanguage = "en_us";
     private static String defaultTextColor = "GRAY";
@@ -26,6 +28,7 @@ public class ConfigReader {
 
     public static void loadConfig() {
         loadConfConfig();
+        loadLanguageToggleConfig();  // Add this line
         loadTranslations();
     }
 
@@ -35,10 +38,13 @@ public class ConfigReader {
         try (FileReader reader = new FileReader(CONF_CONFIG)) {
             JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
 
+            modVersion = config.get("ModVersion").getAsString();
+
             // Load basic settings
             chatMsgFrequency = config.get("ChatMsgFrequency").getAsInt();
             toggleCommandEnabled = config.get("Toggle Command").getAsBoolean();
             defaultStatCategory = config.get("Default Statistik Category").getAsString();
+
 
             // Load toggle mode
             if (config.has("InvertToggleFile")) {
@@ -100,6 +106,7 @@ public class ConfigReader {
     // Getters
     public static boolean isToggleCommandEnabled() { return toggleCommandEnabled; }
     public static int getChatMsgFrequency() { return chatMsgFrequency; }
+    public static String getModVersion() {return modVersion; }
     public static String getDefaultStatCategory() { return defaultStatCategory; }
     public static String getDefaultLanguage() { return defaultLanguage; }
     public static String getDefaultTextColor() { return defaultTextColor; }
@@ -108,4 +115,52 @@ public class ConfigReader {
     public static String getDefaultNumberColor() { return defaultNumberColor; }
     public static boolean isInvertedToggleMode() { return invertToggleFile; }
     public static String getDefaultTimeColor() { return defaultTimeColor; }
+    public static boolean isLanguageEnabled(String langCode) {
+        return languageToggles.getOrDefault(langCode, langCode.equals("en_us"));
+    }
+
+    private static void loadLanguageToggleConfig() {
+        File languageToggleFile = new File("config/survival/lang/language_files_toggle.json");
+        if (!languageToggleFile.exists()) return;
+
+        try (FileReader reader = new FileReader(languageToggleFile)) {
+            JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
+            languageToggles.clear();
+
+            for (Map.Entry<String, JsonElement> entry : config.entrySet()) {
+                languageToggles.put(entry.getKey(), entry.getValue().getAsBoolean());
+            }
+        } catch (Exception e) {
+            System.err.println("Error reading language toggle config: " + e.getMessage());
+        }
+    }
+
+    public static boolean isRecipeEnabled(String recipeId) {
+        // Check if the recipe config file exists
+        File recipeConfigFile = new File("config/survival/recipes.json");
+        if (!recipeConfigFile.exists()) {
+            // If config file doesn't exist, enable all recipes by default
+            return true;
+        }
+
+        try (FileReader reader = new FileReader(recipeConfigFile)) {
+            JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
+
+            // Check if there's a specific setting for this recipe
+            if (config.has(recipeId)) {
+                return config.get(recipeId).getAsBoolean();
+            }
+
+            // Check for a global "all_recipes" setting
+            if (config.has("all_recipes")) {
+                return config.get("all_recipes").getAsBoolean();
+            }
+
+            // Default to enabled if no specific setting exists
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error reading recipe config: " + e.getMessage());
+            return true; // Default to enabled if there's an error
+        }
+    }
 }

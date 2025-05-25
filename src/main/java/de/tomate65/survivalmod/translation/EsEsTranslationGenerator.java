@@ -22,6 +22,7 @@ public class EsEsTranslationGenerator extends TranslationGenerator {
         // Command feedback
         translations.addProperty("command.disabled", "Comando desactivado");
         translations.addProperty("command.player_only", "El comando debe ser ejecutado por un jugador");
+        translations.addProperty("command.language_disabled", "El idioma %s está desactivado en la configuración");
         translations.addProperty("command.invalid_language", "Código de idioma inválido");
         translations.addProperty("command.invalid_toggle", "Este toggle no está permitido en el modo actual (%s)");
         translations.addProperty("command.invalid_hex_color", "Formato de color hexadecimal inválido. Usa RRGGBB o #RRGGBB");
@@ -116,6 +117,11 @@ public class EsEsTranslationGenerator extends TranslationGenerator {
         translations.addProperty("help.language.change", "Cambia tu idioma de visualización:");
         translations.addProperty("help.language.command", "/toggle language <código_idioma>");
         translations.addProperty("help.language.example", "Ejemplo: /toggle language es_es");
+
+        translations.addProperty("survivalmod.info.running", "Estás usando %s del Survival Mod");
+        translations.addProperty("survivalmod.info.update_available", "¡Hay una actualización disponible!");
+        translations.addProperty("survivalmod.info.no_update", "No hay actualizaciones todavía.");
+        translations.addProperty("survivalmod.info.modrinth_link", "Haz clic aquí para ir a la página de Modrinth");
     }
 
     private void addMagnetTranslations(JsonObject translations) {

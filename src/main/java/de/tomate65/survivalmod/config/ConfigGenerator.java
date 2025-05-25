@@ -1,9 +1,11 @@
 package de.tomate65.survivalmod.config;
 
 import com.google.gson.*;
-import de.tomate65.survivalmod.translation.TranslationManager;
+import de.tomate65.survivalmod.manager.TranslationManager;
+import de.tomate65.survivalmod.recipes.RecipeGenerator;
 
 import java.io.*;
+import java.util.List;
 
 public class ConfigGenerator {
     private static final File CONFIG_DIR = new File("config/survival");
@@ -17,9 +19,17 @@ public class ConfigGenerator {
         createDirectory(CONFIG_DIR);
         createDirectory(LANG_DIR);
 
+        // Generate language toggle config first
+        generateLanguageToggleConfig();
+
+        // Then load the config so it's available for translation generation
+        ConfigReader.loadConfig();
+
+        // Now generate other configs and translations
         generateSurvivalConfig();
         generateToggleConfig();
         generateConfConfig();
+        RecipeGenerator.generateAllRecipes(new File("config/survival/recipe"));
         TranslationManager.generateAllTranslations(LANG_DIR);
     }
 
@@ -92,6 +102,8 @@ public class ConfigGenerator {
             try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
                 JsonObject config = new JsonObject();
 
+                config.addProperty("ModVersion", "0.3.0");
+
                 // Toggle Settings
                 config.addProperty("ChatMsgFrequency", 10);
                 config.addProperty("Toggle Command", true);
@@ -119,6 +131,25 @@ public class ConfigGenerator {
                 writer.write(GSON.toJson(config));
             } catch (IOException e) {
                 System.err.println("Error creating conf config: " + e.getMessage());
+            }
+        }
+    }
+
+    private static void generateLanguageToggleConfig() {
+        File languageToggleFile = new File(LANG_DIR, "language_files_toggle.json");
+        if (!languageToggleFile.exists()) {
+            try (FileWriter writer = new FileWriter(languageToggleFile)) {
+                JsonObject config = new JsonObject();
+                List<String> languageCodes = TranslationManager.getAvailableLanguageCodes();
+
+                for (String langCode : languageCodes) {
+                    // Enable only en_us by default
+                    config.addProperty(langCode, langCode.equals("en_us"));
+                }
+
+                writer.write(GSON.toJson(config));
+            } catch (IOException e) {
+                System.err.println("Error creating language toggle config: " + e.getMessage());
             }
         }
     }

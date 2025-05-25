@@ -1,19 +1,23 @@
 package de.tomate65.survivalmod;
 
+import com.mojang.brigadier.CommandDispatcher;
+import de.tomate65.survivalmod.commands.RecipeCommand;
 import de.tomate65.survivalmod.commands.SurvivalCommand;
+import de.tomate65.survivalmod.commands.SurvivalinfoCommand;
 import de.tomate65.survivalmod.commands.ToggleCommand;
 import de.tomate65.survivalmod.config.ConfigGenerator;
 import de.tomate65.survivalmod.config.ConfigReader;
 import de.tomate65.survivalmod.manager.MagnetManager;
+import de.tomate65.survivalmod.manager.RecipeHandler;
 import de.tomate65.survivalmod.togglerenderer.ToggleRenderer;
 import de.tomate65.survivalmod.togglerenderer.ToggleRenderer.PlayerToggleData;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -29,6 +33,8 @@ public class Survivalmod implements ModInitializer {
 		ConfigGenerator.generateConfigs();
 		ConfigReader.loadConfig();
 
+		RecipeHandler.initialize();
+
 		SurvivalCommand.register();
 		ToggleCommand.register();
 
@@ -39,6 +45,12 @@ public class Survivalmod implements ModInitializer {
 					player.networkHandler.sendPacket(new TitleFadeS2CPacket(0, 40, 0));
 				});
 			}
+		});
+
+		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+			CommandDispatcher<ServerCommandSource> dispatcher = server.getCommandManager().getDispatcher();
+			RecipeCommand.register(dispatcher);
+			SurvivalinfoCommand.register(dispatcher);
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {

@@ -22,6 +22,7 @@ public class DeDeTranslationGenerator extends TranslationGenerator {
         // Command feedback
         translations.addProperty("command.disabled", "Befehl deaktiviert");
         translations.addProperty("command.player_only", "Befehl kann nur von einem Spieler ausgeführt werden");
+        translations.addProperty("command.language_disabled", "Sprache %s ist in der Konfiguration deaktiviert");
         translations.addProperty("command.invalid_language", "Ungültiger Sprachcode");
         translations.addProperty("command.invalid_toggle", "Diese Einstellung ist im aktuellen Modus nicht erlaubt (%s)");
         translations.addProperty("command.invalid_hex_color", "Ungültiges Hex-Farbformat. Verwende RRGGBB oder #RRGGBB");
@@ -116,6 +117,11 @@ public class DeDeTranslationGenerator extends TranslationGenerator {
         translations.addProperty("help.language.change", "Ändere deine Anzeigesprache:");
         translations.addProperty("help.language.command", "/toggle language <Sprachcode>");
         translations.addProperty("help.language.example", "Beispiel: /toggle language de_de");
+
+        translations.addProperty("survivalmod.info.running", "Du verwendest %s des Survival Mods");
+        translations.addProperty("survivalmod.info.update_available", "Es gibt ein Update!");
+        translations.addProperty("survivalmod.info.no_update", "Es gibt noch kein Update.");
+        translations.addProperty("survivalmod.info.modrinth_link", "Klicke hier, um zur Modrinth-Seite zu gehen");
     }
 
     private void addMagnetTranslations(JsonObject translations) {
