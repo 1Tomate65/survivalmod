@@ -53,6 +53,22 @@ public class RecipeGenerator {
         helpers.add(new SmithingGoldHorseArmorRecipe());
         helpers.add(new SmithingDiamondHorseArmorRecipe());
         helpers.add(new SmithingCoastArmorTrimRecipe());
+        helpers.add(new SmithingFlowArmorTrimRecipe());
+        helpers.add(new SmithingHostArmorTrimRecipe());
+        helpers.add(new SmithingDuneArmorTrimRecipe());
+        helpers.add(new SmithingEyeArmorTrimRecipe());
+        helpers.add(new SmithingRaiserArmorTrimRecipe());
+        helpers.add(new SmithingRibArmorTrimRecipe());
+        helpers.add(new SmithingSentryArmorTrimRecipe());
+        helpers.add(new SmithingShaperArmorTrimRecipe());
+        helpers.add(new SmithingSilenceArmorTrimRecipe());
+        helpers.add(new SmithingSnoutArmorTrimRecipe());
+        helpers.add(new SmithingSpireArmorTrimRecipe());
+        helpers.add(new SmithingTideArmorTrimRecipe());
+        helpers.add(new SmithingVexArmorTrimRecipe());
+        helpers.add(new SmithingWardArmorTrimRecipe());
+        helpers.add(new SmithingWayfinderArmorTrimRecipe());
+        helpers.add(new SmithingWildArmorTrimRecipe());
     }
 
     public static void generateAllRecipes(File recipeDir) {
