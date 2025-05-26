@@ -4,15 +4,22 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import de.tomate65.survivalmod.manager.SurvivalInfoManager;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
+import javax.naming.Context;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +50,9 @@ public class SurvivalCommand {
                                     return 1;
                                 })
                         )
+                        .then(literal("version")
+                                .requires(source -> source.hasPermissionLevel(1))
+                                .executes(SurvivalCommand::execute))
                         .executes(SurvivalCommand::listAvailableCommands)
         );
 
@@ -54,6 +64,40 @@ public class SurvivalCommand {
                                     .executes(context -> executeSubcommand(context, subcommand))
                             ));
         }
+    }
+
+    static int execute(CommandContext<ServerCommandSource> context) {
+        ServerCommandSource source = context.getSource();
+
+        if (!source.isExecutedByPlayer() || !source.getPlayer().hasPermissionLevel(1)) {
+            source.sendFeedback(() -> Text.literal("You must be an operator to use this command.").formatted(Formatting.RED), false);
+            return Command.SINGLE_SUCCESS;
+        }
+
+        // Send mod info
+        source.sendFeedback(() -> Text.literal("You're running ")
+                .append(Text.literal(SurvivalInfoManager.MOD_VERSION).formatted(Formatting.GREEN))
+                .append(" of the Survival Mod").formatted(Formatting.GREEN), false);
+
+        // Empty line
+        source.sendFeedback(() -> Text.empty(), false);
+
+        // Check for updates
+        if (SurvivalInfoManager.isUpdateAvailable()) {
+            source.sendFeedback(() -> Text.literal("There has been an update!").formatted(Formatting.GREEN), false);
+
+            Text clickableText = Text.literal("Click here to go to the Modrinth Page")
+                    .setStyle(Style.EMPTY
+                            .withColor(Formatting.RED)
+                            .withUnderline(true)
+                            .withClickEvent(new ClickEvent.OpenUrl(URI.create("https://modrinth.com/mod/survivalmod")))
+                    );
+            source.sendFeedback(() -> clickableText, false);
+        } else {
+            source.sendFeedback(() -> Text.literal("There has been no update yet.").formatted(Formatting.GOLD), false);
+        }
+
+        return Command.SINGLE_SUCCESS;
     }
 
     private static void loadConfig() {

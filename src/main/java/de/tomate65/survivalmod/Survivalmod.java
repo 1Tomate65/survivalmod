@@ -3,7 +3,6 @@ package de.tomate65.survivalmod;
 import com.mojang.brigadier.CommandDispatcher;
 import de.tomate65.survivalmod.commands.RecipeCommand;
 import de.tomate65.survivalmod.commands.SurvivalCommand;
-import de.tomate65.survivalmod.commands.SurvivalinfoCommand;
 import de.tomate65.survivalmod.commands.ToggleCommand;
 import de.tomate65.survivalmod.config.ConfigGenerator;
 import de.tomate65.survivalmod.config.ConfigReader;
@@ -50,7 +49,6 @@ public class Survivalmod implements ModInitializer {
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
 			CommandDispatcher<ServerCommandSource> dispatcher = server.getCommandManager().getDispatcher();
 			RecipeCommand.register(dispatcher);
-			SurvivalinfoCommand.register(dispatcher);
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {

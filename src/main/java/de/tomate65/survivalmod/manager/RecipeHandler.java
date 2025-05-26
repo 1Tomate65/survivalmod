@@ -1,5 +1,6 @@
 package de.tomate65.survivalmod.manager;
 
+import de.tomate65.survivalmod.datapackgen.DatapackGen;
 import de.tomate65.survivalmod.recipes.RecipeGenerator;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.util.WorldSavePath;
@@ -22,11 +23,10 @@ public class RecipeHandler {
         RecipeGenerator.generateAllRecipes(RECIPE_DIR);
         loadToggles();
 
-        // Register datapack logic once the server is fully started
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             Path worldPath = server.getSavePath(WorldSavePath.ROOT);
             File datapackFolder = worldPath.resolve("datapacks/runtime_recipes").toFile();
-            registerRecipesToDatapack(datapackFolder);
+            DatapackGen.registerRecipesToDatapack(datapackFolder, enabledRecipes, RECIPE_DIR);
         });
     }
 
@@ -76,59 +76,6 @@ public class RecipeHandler {
 
     public static boolean isRecipeEnabled(String recipe) {
         return enabledRecipes.contains(recipe);
-    }
-
-    public static void registerRecipesToDatapack(File datapackFolder) {
-        File recipesDir = new File(datapackFolder, "data/survival/recipe");
-        File iconFile = new File(datapackFolder, "icon.png");
-        File metaFile = new File(datapackFolder, "pack.mcmeta");
-
-        try {
-            // Clean old recipes
-            if (recipesDir.exists()) {
-                Files.walk(recipesDir.toPath())
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
-            }
-            recipesDir.mkdirs();
-
-            // Write pack.mcmeta
-            if (!metaFile.exists()) {
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(metaFile))) {
-                    writer.write("{\"pack\":{\"pack_format\":26,\"description\":\"SurvivalMod Runtime Recipes\"}}");
-                }
-            }
-
-            // Copy mod icon with rare chance for alternate icon
-            try {
-                String iconPath = (Math.random() < 0.001) ?
-                        "/assets/survivalmod/icon_1.png" :
-                        "/assets/survivalmod/icon.png";
-
-                try (InputStream iconStream = RecipeHandler.class.getResourceAsStream(iconPath)) {
-                    if (iconStream != null) {
-                        Files.copy(iconStream, iconFile.toPath());
-                    } else {
-                        System.out.println("[SurvivalMod] Could not find mod icon at: " + iconPath);
-                    }
-                }
-            } catch (IOException e) {
-                System.err.println("Failed to copy mod icon: " + e.getMessage());
-            }
-
-            // Copy enabled recipes
-            for (String recipeId : enabledRecipes) {
-                File source = new File(RECIPE_DIR, recipeId);
-                File target = new File(recipesDir, recipeId);
-                target.getParentFile().mkdirs();
-                Files.copy(source.toPath(), target.toPath());
-            }
-
-            System.out.println("[SurvivalMod] Dynamic recipes loaded into datapack.");
-        } catch (IOException e) {
-            System.err.println("Failed to register recipes to datapack: " + e.getMessage());
-        }
     }
 
     public static int toggleAllRecipes(boolean enable) {
