@@ -6,15 +6,17 @@ import de.tomate65.survivalmod.manager.MagnetManager;
 import java.io.*;
 import java.util.*;
 
+import static de.tomate65.survivalmod.Survivalmod.ModVersion;
+
 public class ConfigReader {
-    private static final File CONF_CONFIG = new File("config/survival/conf.json");
-    private static final File LANG_DIR = new File("config/survival/lang");
+    private static final File CONF_CONFIG = new File("config/survival/" + ConfigReader.getModVersion() + "/conf.json");
+    private static final File LANG_DIR = new File("config/survival/" + ConfigReader.getModVersion() + "/lang");
 
     // Configuration values with defaults
     private static boolean toggleCommandEnabled = true;
     private static boolean invertToggleFile = false;
     private static int chatMsgFrequency = 10;
-    private static String modVersion = "0.3.0";
+    private static String modVersion = ModVersion;
     private static final Map<String, Boolean> languageToggles = new HashMap<>();
     private static String defaultStatCategory = "mined";
     private static String defaultLanguage = "en_us";
@@ -120,7 +122,7 @@ public class ConfigReader {
     }
 
     private static void loadLanguageToggleConfig() {
-        File languageToggleFile = new File("config/survival/lang/language_files_toggle.json");
+        File languageToggleFile = new File("config/survival/" + ConfigReader.getModVersion() + "/lang/language_files_toggle.json");
         if (!languageToggleFile.exists()) return;
 
         try (FileReader reader = new FileReader(languageToggleFile)) {
@@ -137,7 +139,7 @@ public class ConfigReader {
 
     public static boolean isRecipeEnabled(String recipeId) {
         // Check if the recipe config file exists
-        File recipeConfigFile = new File("config/survival/recipes.json");
+        File recipeConfigFile = new File("config/survival/" + ConfigReader.getModVersion() + "/recipes.json");
         if (!recipeConfigFile.exists()) {
             // If config file doesn't exist, enable all recipes by default
             return true;

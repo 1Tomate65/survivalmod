@@ -2,14 +2,17 @@ package de.tomate65.survivalmod.config;
 
 import com.google.gson.*;
 import de.tomate65.survivalmod.manager.TranslationManager;
+import de.tomate65.survivalmod.manager.UpdateHelper;
 import de.tomate65.survivalmod.recipes.RecipeGenerator;
 
 import java.io.*;
 import java.util.List;
 
+import static de.tomate65.survivalmod.Survivalmod.ModVersion;
+
 public class ConfigGenerator {
-    private static final File CONFIG_DIR = new File("config/survival");
-    private static final File LANG_DIR = new File("config/survival/lang");
+    private static final File CONFIG_DIR = new File("config/survival/" + UpdateHelper.getCurrentVersion());
+    private static final File LANG_DIR = new File("config/survival/" + UpdateHelper.getCurrentVersion() + "/lang");
     private static final File SURVIVAL_CONFIG = new File(CONFIG_DIR, "survival.json");
     private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
     private static final File CONF_CONFIG = new File(CONFIG_DIR, "conf.json");
@@ -29,7 +32,7 @@ public class ConfigGenerator {
         generateSurvivalConfig();
         generateToggleConfig();
         generateConfConfig();
-        RecipeGenerator.generateAllRecipes(new File("config/survival/recipe"));
+        RecipeGenerator.generateAllRecipes(new File("config/survival/" + UpdateHelper.getCurrentVersion() + "/recipe"));
         TranslationManager.generateAllTranslations(LANG_DIR);
     }
 
@@ -102,7 +105,7 @@ public class ConfigGenerator {
             try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
                 JsonObject config = new JsonObject();
 
-                config.addProperty("ModVersion", "0.3.0");
+                config.addProperty("ModVersion", ModVersion);
 
                 // Toggle Settings
                 config.addProperty("ChatMsgFrequency", 10);

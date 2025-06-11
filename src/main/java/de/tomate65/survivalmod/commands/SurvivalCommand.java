@@ -7,7 +7,9 @@ import com.google.gson.JsonParser;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import de.tomate65.survivalmod.config.ConfigReader;
 import de.tomate65.survivalmod.manager.SurvivalInfoManager;
+import de.tomate65.survivalmod.manager.UpdateHelper;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.ClickEvent;
@@ -15,7 +17,6 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import javax.naming.Context;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -28,7 +29,7 @@ import java.util.Map;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class SurvivalCommand {
-    private static final File CONFIG_FILE = new File("config/survival/survival.json");
+    private static final File CONFIG_FILE = new File("config/survival/" + ConfigReader.getModVersion() + "/survival.json");
     private static Map<String, List<String>> subcommands = new HashMap<>();
 
     public static void register() {
@@ -54,6 +55,10 @@ public class SurvivalCommand {
                                 .requires(source -> source.hasPermissionLevel(1))
                                 .executes(SurvivalCommand::execute))
                         .executes(SurvivalCommand::listAvailableCommands)
+
+                        .then(literal("autoupdate")
+                                .requires(source -> source.hasPermissionLevel(4)) // High permission level
+                                .executes(SurvivalCommand::executeAutoUpdate))
         );
 
         // Register all subcommands from config
@@ -63,6 +68,34 @@ public class SurvivalCommand {
                             .then(literal(subcommand)
                                     .executes(context -> executeSubcommand(context, subcommand))
                             ));
+        }
+    }
+
+    private static int executeAutoUpdate(CommandContext<ServerCommandSource> context) {
+        ServerCommandSource source = context.getSource();
+
+        if (!source.hasPermissionLevel(4)) {
+            source.sendError(Text.literal("You don't have permission to use this command.").formatted(Formatting.RED));
+            return 0;
+        }
+
+        try {
+            source.sendFeedback(() -> Text.literal("§7Starting config update process..."), false);
+
+            // Perform the update check and migration
+            UpdateHelper.checkAndUpdateConfigs();
+
+            // Reload the config to ensure we're using the latest version
+            loadConfig();
+
+            source.sendFeedback(() -> Text.literal("§aConfig files have been successfully updated to version " + UpdateHelper.getCurrentVersion()), false);
+            source.sendFeedback(() -> Text.literal("§7The old config files have been preserved in their version folder."), false);
+
+            return Command.SINGLE_SUCCESS;
+        } catch (Exception e) {
+            source.sendError(Text.literal("§cError during auto-update: " + e.getMessage()));
+            e.printStackTrace();
+            return -1;
         }
     }
 

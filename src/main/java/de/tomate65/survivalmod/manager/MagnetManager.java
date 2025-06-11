@@ -3,6 +3,7 @@ package de.tomate65.survivalmod.manager;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import de.tomate65.survivalmod.config.ConfigReader;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -67,7 +68,7 @@ public class MagnetManager {
         }
 
         // Fallback to file
-        File playerFile = new File("config/survival/playerdata", playerId.toString() + ".json");
+        File playerFile = new File("config/survival/" + ConfigReader.getModVersion() + "/playerdata", playerId.toString() + ".json");
         if (playerFile.exists()) {
             try (FileReader reader = new FileReader(playerFile)) {
                 JsonObject playerData = JsonParser.parseReader(reader).getAsJsonObject();

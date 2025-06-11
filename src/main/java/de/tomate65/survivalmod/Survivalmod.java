@@ -26,10 +26,12 @@ import org.slf4j.LoggerFactory;
 public class Survivalmod implements ModInitializer {
 	public static final String MOD_ID = "survivalmod";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+	public static final String ModVersion = "0.3.0";
 
 	@Override
 	public void onInitialize() {
 		ConfigGenerator.generateConfigs();
+
 		ConfigReader.loadConfig();
 
 		RecipeHandler.initialize();
@@ -37,7 +39,7 @@ public class Survivalmod implements ModInitializer {
 		SurvivalCommand.register();
 		ToggleCommand.register();
 
-		// Set default title timings for all players
+
 		ServerTickEvents.START_SERVER_TICK.register(server -> {
 			if (server.getTicks() == 1) {
 				server.getPlayerManager().getPlayerList().forEach(player -> {
@@ -52,10 +54,9 @@ public class Survivalmod implements ModInitializer {
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
-			if (server.getTicks() % 5 != 0) return; // Run every 5 ticks for performance
+			if (server.getTicks() % 5 != 0) return;
 
 			server.getPlayerManager().getPlayerList().forEach(player -> {
-				// Magnet functionality
 				if (MagnetManager.getMagnetState(player.getUuid())) {
 					Box attractionBox = MagnetManager.getMagnetBox(player);
 					player.getWorld().getEntitiesByClass(ItemEntity.class, attractionBox, item -> true)
@@ -71,7 +72,6 @@ public class Survivalmod implements ModInitializer {
 							});
 				}
 
-				// Debug logging for toggle rendering
 				PlayerToggleData data = ToggleRenderer.getPlayerData(player);
 				if (data != null && ToggleRenderer.hasActiveToggle(player)) {
 					LOGGER.debug("Rendering toggle for {}: {} {} {}",
@@ -81,7 +81,6 @@ public class Survivalmod implements ModInitializer {
 							data.statCategory);
 				}
 
-				// Render toggle messages
 				ToggleRenderer.renderForPlayer(player);
 			});
 		});
@@ -94,7 +93,6 @@ public class Survivalmod implements ModInitializer {
 			ServerPlayerEntity player = handler.player;
 			player.networkHandler.sendPacket(new TitleFadeS2CPacket(0, 40, 0));
 
-			// Clear and reapply any active toggles when player joins
 			ToggleRenderer.clearCache(player.getUuid());
 			if (ToggleRenderer.hasActiveToggle(player)) {
 				ToggleRenderer.renderForPlayer(player);

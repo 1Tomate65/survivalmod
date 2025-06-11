@@ -1,17 +1,22 @@
 package de.tomate65.survivalmod.recipes;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import de.tomate65.survivalmod.config.ConfigReader;
 import de.tomate65.survivalmod.manager.RecipeHandler;
 import net.minecraft.server.command.ServerCommandSource;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class RecipeGenerator {
     private static final List<RecipeGeneratorHelper> helpers = new ArrayList<>();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     static {
         // Crafting recipes
@@ -73,16 +78,24 @@ public class RecipeGenerator {
 
     public static void generateAllRecipes(File recipeDir) {
         if (!recipeDir.exists() && !recipeDir.mkdirs()) {
-            System.err.println("Failed to create recipe directory");
+            System.err.println("[SurvivalMod] Failed to create recipe directory at: " + recipeDir.getAbsolutePath());
             return;
         }
 
+        int generatedCount = 0;
         for (RecipeGeneratorHelper helper : helpers) {
             String recipeId = getRecipeIdFromHelper(helper);
             if (ConfigReader.isRecipeEnabled(recipeId)) {
-                helper.generateRecipeFile(recipeDir);
+                try {
+                    helper.generateRecipeFile(recipeDir);
+                    generatedCount++;
+                } catch (Exception e) {
+                    System.err.println("[SurvivalMod] Failed to generate recipe " + recipeId + ": " + e.getMessage());
+                }
             }
         }
+
+        System.out.println("[SurvivalMod] Successfully generated " + generatedCount + " recipes");
     }
 
     private static String getRecipeIdFromHelper(RecipeGeneratorHelper helper) {
@@ -98,6 +111,13 @@ public class RecipeGenerator {
             ids.add(getRecipeIdFromHelper(helper));
         }
         return ids;
+    }
+
+    public static void writeRecipeFile(File outputFile, Object recipeData) throws IOException {
+        outputFile.getParentFile().mkdirs();
+        try (FileWriter writer = new FileWriter(outputFile)) {
+            GSON.toJson(recipeData, writer);
+        }
     }
 
     private static final SuggestionProvider<ServerCommandSource> RECIPE_SUGGESTIONS =

@@ -26,9 +26,9 @@ import static de.tomate65.survivalmod.togglerenderer.ToggleRenderer.getPlayerCol
 import static net.minecraft.server.command.CommandManager.*;
 
 public class ToggleCommand {
-    private static final File CONFIG_FILE = new File("config/survival/toggle.json");
-    private static final File MAIN_CONFIG_FILE = new File("config/survival/conf.json");
-    private static final File PLAYERDATA_DIR = new File("config/survival/playerdata");
+    private static final File CONFIG_FILE = new File("config/survival/" + ConfigReader.getModVersion() + "/toggle.json");
+    private static final File MAIN_CONFIG_FILE = new File("config/survival/" + ConfigReader.getModVersion() + "/conf.json");
+    private static final File PLAYERDATA_DIR = new File("config/survival/" + ConfigReader.getModVersion() + "/playerdata");
     private static Set<String> availableToggles = new HashSet<>();
     private static boolean isCommandEnabled = true;
     private static String defaultStatCategory = "mined";
