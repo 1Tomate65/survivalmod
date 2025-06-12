@@ -10,7 +10,7 @@ import static de.tomate65.survivalmod.Survivalmod.ModVersion;
 
 public class ConfigReader {
     private static final File CONF_CONFIG = new File("config/survival/" + ConfigReader.getModVersion() + "/conf.json");
-    private static final File LANG_DIR = new File("config/survival/" + ConfigReader.getModVersion() + "/lang");
+    private static final File LANG_DIR = new File("config/survival/" + ModVersion + "/lang");
 
     // Configuration values with defaults
     private static boolean toggleCommandEnabled = true;
@@ -26,11 +26,11 @@ public class ConfigReader {
     private static String defaultNumberColor = "GOLD";
     private static String defaultTimeColor = "AQUA";
 
-    private static final Map<String, Map<String, String>> translations = new HashMap<>();
+    public static final Map<String, Map<String, String>> translations = new HashMap<>();
 
     public static void loadConfig() {
         loadConfConfig();
-        loadLanguageToggleConfig();  // Add this line
+        loadLanguageToggleConfig();
         loadTranslations();
     }
 
@@ -77,10 +77,15 @@ public class ConfigReader {
     private static void loadTranslations() {
         translations.clear();
         File[] langFiles = LANG_DIR.listFiles((dir, name) -> name.endsWith(".json"));
-        if (langFiles == null) return;
+        if (langFiles == null) {
+            System.err.println("No language files found in: " + LANG_DIR.getAbsolutePath());
+            return;
+        }
 
+        System.out.println("Loading " + langFiles.length + " language files");
         for (File langFile : langFiles) {
             String langCode = langFile.getName().replace(".json", "");
+            System.out.println("Loading language: " + langCode);
             try (FileReader reader = new FileReader(langFile)) {
                 JsonObject langData = JsonParser.parseReader(reader).getAsJsonObject();
                 Map<String, String> langMap = new HashMap<>();
@@ -90,8 +95,10 @@ public class ConfigReader {
                 }
 
                 translations.put(langCode, langMap);
+                System.out.println("Loaded " + langMap.size() + " translations for " + langCode);
             } catch (Exception e) {
                 System.err.println("Error loading language file: " + langFile.getName());
+                e.printStackTrace();
             }
         }
     }

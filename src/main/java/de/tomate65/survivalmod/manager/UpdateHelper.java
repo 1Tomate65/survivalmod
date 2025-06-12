@@ -36,6 +36,7 @@ public class UpdateHelper {
             moveConfigsToVersionedFolder(oldVersionFolder);
 
             ConfigGenerator.generateConfigs();
+            ConfigReader.loadConfig();
         }
     }
 

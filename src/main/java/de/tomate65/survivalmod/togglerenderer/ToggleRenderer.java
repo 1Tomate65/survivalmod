@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.*;
 
 public class ToggleRenderer {
-    private static final File PLAYERDATA_DIR = new File("config/survival/playerdata");
+    private static final File PLAYERDATA_DIR = new File("config/survival/" + ConfigReader.getModVersion() + "/playerdata");
     private static final Map<UUID, PlayerToggleData> playerDataCache = new HashMap<>();
     private static final Map<UUID, Integer> lastMilestoneReached = new HashMap<>();
 
@@ -54,8 +54,10 @@ public class ToggleRenderer {
                     .styled(style -> style.withColor(parseColor(getPlayerColor(player, "time"))))
                     : createActionbarMessage(player, data.toggleItem, data.statCategory, currentStatCount);
             player.sendMessage(message, true);
+
         } else if (data.location.equals("chat")) {
             handleChatMessage(player, data, currentStatCount);
+
         } else if (data.location.equals("title")) {
             Text message = createTitleMessage(player, data.toggleItem, data.statCategory, currentStatCount);
             player.networkHandler.sendPacket(new TitleS2CPacket(message));

@@ -25,15 +25,13 @@ public class ConfigGenerator {
         // Generate language toggle config first
         generateLanguageToggleConfig();
 
-        // Then load the config so it's available for translation generation
-        ConfigReader.loadConfig();
-
-        // Now generate other configs and translations
         generateSurvivalConfig();
         generateToggleConfig();
         generateConfConfig();
         RecipeGenerator.generateAllRecipes(new File("config/survival/" + UpdateHelper.getCurrentVersion() + "/recipe"));
         TranslationManager.generateAllTranslations(LANG_DIR);
+
+        ConfigReader.loadConfig();
     }
 
 
