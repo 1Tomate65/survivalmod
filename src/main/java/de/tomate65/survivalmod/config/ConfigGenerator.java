@@ -11,8 +11,8 @@ import java.util.List;
 import static de.tomate65.survivalmod.Survivalmod.ModVersion;
 
 public class ConfigGenerator {
-    private static final File CONFIG_DIR = new File("config/survival/" + UpdateHelper.getCurrentVersion());
-    private static final File LANG_DIR = new File("config/survival/" + UpdateHelper.getCurrentVersion() + "/lang");
+    private static final File CONFIG_DIR = new File("config/survival/" + ModVersion);
+    private static final File LANG_DIR = new File("config/survival/" + ModVersion + "/lang");
     private static final File SURVIVAL_CONFIG = new File(CONFIG_DIR, "survival.json");
     private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
     private static final File CONF_CONFIG = new File(CONFIG_DIR, "conf.json");
@@ -28,7 +28,7 @@ public class ConfigGenerator {
         generateSurvivalConfig();
         generateToggleConfig();
         generateConfConfig();
-        RecipeGenerator.generateAllRecipes(new File("config/survival/" + UpdateHelper.getCurrentVersion() + "/recipe"));
+        RecipeGenerator.generateAllRecipes(new File("config/survival/" + ModVersion + "/recipe"));
         TranslationManager.generateAllTranslations(LANG_DIR);
 
         ConfigReader.loadConfig();

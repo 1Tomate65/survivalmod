@@ -20,8 +20,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
+import static de.tomate65.survivalmod.Survivalmod.ModVersion;
+
 public class ToggleRenderer {
-    private static final File PLAYERDATA_DIR = new File("config/survival/" + ConfigReader.getModVersion() + "/playerdata");
+    private static final File PLAYERDATA_DIR = new File("config/survival/" + ModVersion + "/playerdata");
     private static final Map<UUID, PlayerToggleData> playerDataCache = new HashMap<>();
     private static final Map<UUID, Integer> lastMilestoneReached = new HashMap<>();
 

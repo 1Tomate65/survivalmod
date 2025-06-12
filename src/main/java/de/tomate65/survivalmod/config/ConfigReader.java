@@ -9,7 +9,7 @@ import java.util.*;
 import static de.tomate65.survivalmod.Survivalmod.ModVersion;
 
 public class ConfigReader {
-    private static final File CONF_CONFIG = new File("config/survival/" + ConfigReader.getModVersion() + "/conf.json");
+    private static final File CONF_CONFIG = new File("config/survival/" + ModVersion + "/conf.json");
     private static final File LANG_DIR = new File("config/survival/" + ModVersion + "/lang");
 
     // Configuration values with defaults
