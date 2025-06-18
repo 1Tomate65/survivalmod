@@ -8,7 +8,7 @@ import de.tomate65.survivalmod.recipes.RecipeGenerator;
 import java.io.*;
 import java.util.List;
 
-import static de.tomate65.survivalmod.Survivalmod.ModVersion;
+import static de.tomate65.survivalmod.Survivalmod.ModVersion; // <-- this is the current Version, 0.3.0
 
 public class ConfigGenerator {
     private static final File CONFIG_DIR = new File("config/survival/" + ModVersion);
@@ -17,6 +17,10 @@ public class ConfigGenerator {
     private static final File TOGGLE_CONFIG = new File(CONFIG_DIR, "toggle.json");
     private static final File CONF_CONFIG = new File(CONFIG_DIR, "conf.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    public static final String[] VERSIONS = {
+            ModVersion
+    };
 
     public static void generateConfigs() {
         createDirectory(CONFIG_DIR);
@@ -54,19 +58,36 @@ public class ConfigGenerator {
                         " ",
                         "Originally created for a private server",
                         " ",
-                        "The Mod is translated into 10 languages",
+                        "The Mod is translated into 13 languages",
                         "Toggle them with /toggle language language id",
                         "§cPlease Report any translation error on the Issue page on github",
                         " ",
                         "Feel free to suggest improvements"));
                 survival.add("changelog", createStringArray(
-                        "§7§l§nChangelog",
+                        "§7§l§nChangelog §8- §60.3.0 The Structure and balancing Update",
                         "",
-                        "§7-§r §aAdd the Magnet to the Toggle Command",
-                        "§7-§r §aAdd two more languages:",
-                        "§7>> §aItalien & Turkish",
-                        "§7-§r §aRemade the Translation Part",
-                        "For more details read the modrinth changelog"
+                        "§l§6§nAdditions & Removals",
+                        "§7- §2Added Swiss German as a Translation",
+                        "§7- §2Reworked Config System",
+                        "§7- §2Added Loottables - a complete list on Modrinth",
+                        "§7- §2Redesigned most Structures",
+                        "§7- §2Removed redundant recipes",
+                        "§7- §2Added Tall Dry Grass Recipe",
+                        "§7- §2Balanced nether_shelter_1 to no longer spawn a ``Netherite Axt`` containing Looting 3 as an Enchantment",
+                        "§7- §2Balanced Loottable for most Structures",
+                        "",
+                        "§l§6§nBug Fixes",
+                        "§7- §2Fixed a bug, there in certain languages some translations completely went missing",
+                        "§7- §2Fixed a bug, there the nether shelters spawned on the nether roof",
+                        "§7- §2Fixed a bug, there identical structures spawned right next to each other",
+                        "§7- §2Fixed a bugs, As they came and couldn't be noticed",
+                        "",
+                        "§l§6§nThanks",
+                        "§9A thank you, to Desonetos for translating the language",
+                        "§9A thank you, to This_Pluto for Hearing me out and suggesting and testing unofficial versions",
+                        "§9A thank you, to TheCityCrafter, EinFynn, wchtig_, Fortex and Connplay for reading the Modrinth Description and giveing me feedback",
+                        "even thou I ask you nicely"
+
                 ));
 
                 commands.add("survival", survival);
@@ -144,8 +165,9 @@ public class ConfigGenerator {
                 List<String> languageCodes = TranslationManager.getAvailableLanguageCodes();
 
                 for (String langCode : languageCodes) {
-                    // Enable only en_us by default
-                    config.addProperty(langCode, langCode.equals("en_us"));
+                    // Use the proper underscored codes from TranslationManager
+                    boolean isDefault = langCode.equals(ConfigReader.getDefaultLanguage());
+                    config.addProperty(langCode, isDefault);
                 }
 
                 writer.write(GSON.toJson(config));

@@ -6,6 +6,7 @@ import de.tomate65.survivalmod.commands.SurvivalCommand;
 import de.tomate65.survivalmod.commands.ToggleCommand;
 import de.tomate65.survivalmod.config.ConfigGenerator;
 import de.tomate65.survivalmod.config.ConfigReader;
+import de.tomate65.survivalmod.manager.ConfigBackupManager;
 import de.tomate65.survivalmod.manager.MagnetManager;
 import de.tomate65.survivalmod.manager.RecipeHandler;
 import de.tomate65.survivalmod.togglerenderer.ToggleRenderer;
@@ -22,6 +23,8 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class Survivalmod implements ModInitializer {
 	public static final String MOD_ID = "survivalmod";
@@ -49,6 +52,7 @@ public class Survivalmod implements ModInitializer {
 		});
 
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+			ConfigBackupManager.getInstance().checkAndUpdateConfigs();
 			CommandDispatcher<ServerCommandSource> dispatcher = server.getCommandManager().getDispatcher();
 			RecipeCommand.register(dispatcher);
 		});

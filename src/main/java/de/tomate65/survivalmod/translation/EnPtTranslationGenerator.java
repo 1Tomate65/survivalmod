@@ -39,6 +39,25 @@ public class EnPtTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "Available languages: %s");
         translations.addProperty("command.hex_format", "Hex format can be either RRGGBB or #RRGGBB, aye!");
         translations.addProperty("command.reset_partial", "Cleared yer %s settings, arr!");
+        translations.addProperty("command.set_usage.title", "=== Set Command Guide, arr! ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <treasure_id>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <stat_category>");
+
+        // For messages in a bottle (required by ToggleRenderer)
+        translations.addProperty("message.action.mined", "plundered");
+        translations.addProperty("message.action.crafted", "cobbled together");
+        translations.addProperty("message.action.used", "put to use");
+        translations.addProperty("message.action.broken", "smashed");
+        translations.addProperty("message.action.picked_up", "snatched up");
+        translations.addProperty("message.action.dropped", "dropped");
+        translations.addProperty("message.action.killed", "sent to Davy Jones' locker");
+        translations.addProperty("message.action.killed_by", "sent to Davy Jones' locker by");
+        translations.addProperty("message.action.custom", "made a name for yerself in");
+        translations.addProperty("message.you", "Ye");
+        translations.addProperty("message.have", "have");
+        translations.addProperty("message.plural", "s");
+        translations.addProperty("message.exclamation", ", arr!");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "Set timeplayed to display in %s, arr!");
@@ -117,6 +136,14 @@ public class EnPtTranslationGenerator extends TranslationGenerator {
         translations.addProperty("help.language.change", "Change yer display language:");
         translations.addProperty("help.language.command", "/toggle language <language_code>");
         translations.addProperty("help.language.example", "Example: /toggle language en_pt, arr!");
+
+        translations.addProperty("help.clear.partial_command", "/toggle clear <type> - Scuttle specific settings, matey!");
+        translations.addProperty("help.clear.partial_removes", "Options for scuttlin' parts o' yer settings:");
+        translations.addProperty("help.clear.partial_colors", "- /toggle clear color - All yer colors");
+        translations.addProperty("help.clear.partial_color_types", "- /toggle clear color <type> - A specific color");
+        translations.addProperty("help.clear.partial_toggle", "- /toggle clear toggle - Just yer toggle settings");
+        translations.addProperty("help.clear.partial_language", "- /toggle clear language - Just yer lingo");
+        translations.addProperty("help.clear.partial", "/toggle clear <type> - Scuttle specific settings");
 
         translations.addProperty("survivalmod.info.running", "Você está executando %s do Survival Mod");
         translations.addProperty("survivalmod.info.update_available", "Há uma atualização disponível!");

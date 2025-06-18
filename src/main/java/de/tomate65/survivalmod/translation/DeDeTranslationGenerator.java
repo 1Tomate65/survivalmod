@@ -39,6 +39,24 @@ public class DeDeTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "Verfügbare Sprachen: %s");
         translations.addProperty("command.hex_format", "Hex-Format kann entweder RRGGBB oder #RRGGBB sein");
         translations.addProperty("command.reset_partial", "Deine %s Einstellungen wurden gelöscht");
+        translations.addProperty("command.set_usage.title", "=== Set-Befehl Verwendung ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <Gegenstand_ID>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <Statistik_Kategorie>");
+
+        translations.addProperty("message.action.mined", "abgebaut");
+        translations.addProperty("message.action.crafted", "hergestellt");
+        translations.addProperty("message.action.used", "benutzt");
+        translations.addProperty("message.action.broken", "zerstört");
+        translations.addProperty("message.action.picked_up", "aufgesammelt");
+        translations.addProperty("message.action.dropped", "fallengelassen");
+        translations.addProperty("message.action.killed", "getötet");
+        translations.addProperty("message.action.killed_by", "getötet von");
+        translations.addProperty("message.action.custom", "einen Meilenstein erreicht für");
+        translations.addProperty("message.you", "Du");
+        translations.addProperty("message.have", "hast");
+        translations.addProperty("message.plural", "e");
+        translations.addProperty("message.exclamation", "!");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "Spielzeit wird nun in %s angezeigt");

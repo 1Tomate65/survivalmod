@@ -39,6 +39,24 @@ public class RuRuTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "Доступные языки: %s");
         translations.addProperty("command.hex_format", "Hex-формат может быть RRGGBB или #RRGGBB");
         translations.addProperty("command.reset_partial", "Ваши настройки %s очищены");
+        translations.addProperty("command.set_usage.title", "=== Использование команды Set ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <ID_объекта>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <категория_статистики>");
+
+        translations.addProperty("message.action.mined", "добыл(а)");
+        translations.addProperty("message.action.crafted", "создал(а)");
+        translations.addProperty("message.action.used", "использовал(а)");
+        translations.addProperty("message.action.broken", "сломал(а)");
+        translations.addProperty("message.action.picked_up", "подобрал(а)");
+        translations.addProperty("message.action.dropped", "выбросил(а)");
+        translations.addProperty("message.action.killed", "убил(а)");
+        translations.addProperty("message.action.killed_by", "был(а) убит(а)");
+        translations.addProperty("message.action.custom", "достиг(ла) результата в");
+        translations.addProperty("message.you", "Ты");
+        translations.addProperty("message.have", "");
+        translations.addProperty("message.plural", "");
+        translations.addProperty("message.exclamation", "!");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "Время игры установлено для отображения в %s");

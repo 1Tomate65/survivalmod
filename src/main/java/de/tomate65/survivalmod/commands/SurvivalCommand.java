@@ -8,6 +8,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import de.tomate65.survivalmod.config.ConfigReader;
+import de.tomate65.survivalmod.manager.ConfigBackupManager;
 import de.tomate65.survivalmod.manager.SurvivalInfoManager;
 import de.tomate65.survivalmod.manager.UpdateHelper;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static net.minecraft.server.command.CommandManager.literal;
 
@@ -71,6 +73,19 @@ public class SurvivalCommand {
         }
     }
 
+    private static int reloadConfigs(ServerCommandSource source) {
+        try {
+            // Change this line:
+            ConfigBackupManager.getInstance().checkAndUpdateConfigs();
+            ConfigReader.loadConfig();
+            source.sendFeedback((Supplier<Text>) Text.literal("Configs reloaded successfully"), false);
+            return 1;
+        } catch (Exception e) {
+            source.sendError(Text.literal("Failed to reload configs: " + e.getMessage()));
+            return 0;
+        }
+    }
+
     private static int executeAutoUpdate(CommandContext<ServerCommandSource> context) {
         ServerCommandSource source = context.getSource();
 
@@ -83,7 +98,7 @@ public class SurvivalCommand {
             source.sendFeedback(() -> Text.literal("§7Starting config update process..."), false);
 
             // Perform the update check and migration
-            UpdateHelper.checkAndUpdateConfigs();
+            ConfigBackupManager.getInstance().checkAndUpdateConfigs();
 
             // Reload the config to ensure we're using the latest version
             loadConfig();

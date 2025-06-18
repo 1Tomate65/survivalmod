@@ -39,6 +39,24 @@ public class ItItTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "Lingue disponibili: %s");
         translations.addProperty("command.hex_format", "Il formato esadecimale può essere RRGGBB o #RRGGBB");
         translations.addProperty("command.reset_partial", "Cancellate le tue impostazioni %s");
+        translations.addProperty("command.set_usage.title", "=== Uso del Comando Set ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <id_oggetto>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <categoria_statistiche>");
+
+        translations.addProperty("message.action.mined", "minato");
+        translations.addProperty("message.action.crafted", "creato");
+        translations.addProperty("message.action.used", "usato");
+        translations.addProperty("message.action.broken", "rotto");
+        translations.addProperty("message.action.picked_up", "raccolto");
+        translations.addProperty("message.action.dropped", "lasciato cadere");
+        translations.addProperty("message.action.killed", "ucciso");
+        translations.addProperty("message.action.killed_by", "stato ucciso da");
+        translations.addProperty("message.action.custom", "raggiunto un traguardo in");
+        translations.addProperty("message.you", "Hai");
+        translations.addProperty("message.have", "");
+        translations.addProperty("message.plural", "");
+        translations.addProperty("message.exclamation", "!");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "Tempo di gioco impostato per visualizzare in %s");

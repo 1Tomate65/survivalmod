@@ -39,6 +39,24 @@ public class EsEsTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "Idiomas disponibles: %s");
         translations.addProperty("command.hex_format", "El formato hexadecimal puede ser RRGGBB o #RRGGBB");
         translations.addProperty("command.reset_partial", "Borradas tus configuraciones %s");
+        translations.addProperty("command.set_usage.title", "=== Uso del Comando Set ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <id_objeto>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <categoría_estadística>");
+
+        translations.addProperty("message.action.mined", "minado");
+        translations.addProperty("message.action.crafted", "fabricado");
+        translations.addProperty("message.action.used", "usado");
+        translations.addProperty("message.action.broken", "roto");
+        translations.addProperty("message.action.picked_up", "recogido");
+        translations.addProperty("message.action.dropped", "soltado");
+        translations.addProperty("message.action.killed", "matado a");
+        translations.addProperty("message.action.killed_by", "sido matado por");
+        translations.addProperty("message.action.custom", "alcanzado un hito en");
+        translations.addProperty("message.you", "Has");
+        translations.addProperty("message.have", "");
+        translations.addProperty("message.plural", "s");
+        translations.addProperty("message.exclamation", "!");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "Establecer tiempo jugado para mostrar en %s");
@@ -140,7 +158,13 @@ public class EsEsTranslationGenerator extends TranslationGenerator {
         translations.addProperty("help.clear.colors", "- Todas las preferencias de color");
         translations.addProperty("help.clear.language", "- Selección de idioma");
         translations.addProperty("help.clear.note", "Necesitarás configurar todo de nuevo después de reiniciar.");
-
+        translations.addProperty("help.clear.partial_command", "/toggle clear <tipo> - Reinicia configuraciones específicas");
+        translations.addProperty("help.clear.partial_removes", "Opciones de reinicio parcial:");
+        translations.addProperty("help.clear.partial_colors", "- /toggle clear color - Todos los colores");
+        translations.addProperty("help.clear.partial_color_types", "- /toggle clear color <tipo> - Un color específico");
+        translations.addProperty("help.clear.partial_toggle", "- /toggle clear toggle - Solo las configuraciones de toggle");
+        translations.addProperty("help.clear.partial_language", "- /toggle clear language - Solo el idioma");
+        translations.addProperty("help.clear.partial", "/toggle clear <tipo> - Borrar configuraciones específicas");
         translations.addProperty("command.clear.color.text", "Color de texto borrado");
         translations.addProperty("command.clear.color.category", "Color de categoría borrado");
         translations.addProperty("command.clear.color.material", "Color de material borrado");

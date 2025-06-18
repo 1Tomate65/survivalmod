@@ -39,6 +39,25 @@ public class EnUsTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "Available languages: %s");
         translations.addProperty("command.hex_format", "Hex format can be either RRGGBB or #RRGGBB");
         translations.addProperty("command.reset_partial", "Cleared your %s settings");
+        translations.addProperty("command.set_usage.title", "=== Set Command Usage ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <item_id>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <stat_category>");
+
+        // For formatted chat messages (in ToggleRenderer)
+        translations.addProperty("message.action.mined", "mined");
+        translations.addProperty("message.action.crafted", "crafted");
+        translations.addProperty("message.action.used", "used");
+        translations.addProperty("message.action.broken", "broken");
+        translations.addProperty("message.action.picked_up", "picked up");
+        translations.addProperty("message.action.dropped", "dropped");
+        translations.addProperty("message.action.killed", "killed");
+        translations.addProperty("message.action.killed_by", "been killed by");
+        translations.addProperty("message.action.custom", "reached a milestone in");
+        translations.addProperty("message.you", "You");
+        translations.addProperty("message.have", "have");
+        translations.addProperty("message.plural", "s");
+        translations.addProperty("message.exclamation", "!");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "Set timeplayed to display in %s");

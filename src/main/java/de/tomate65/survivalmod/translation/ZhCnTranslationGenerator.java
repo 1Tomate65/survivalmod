@@ -39,6 +39,24 @@ public class ZhCnTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "可用语言: %s");
         translations.addProperty("command.hex_format", "十六进制格式可以是RRGGBB或#RRGGBB");
         translations.addProperty("command.reset_partial", "已清除您的%s设置");
+        translations.addProperty("command.set_usage.title", "=== Set 命令用法 ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <物品ID>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <统计类别>");
+
+        translations.addProperty("message.action.mined", "挖掘了");
+        translations.addProperty("message.action.crafted", "制作了");
+        translations.addProperty("message.action.used", "使用了");
+        translations.addProperty("message.action.broken", "破坏了");
+        translations.addProperty("message.action.picked_up", "拾取了");
+        translations.addProperty("message.action.dropped", "丢弃了");
+        translations.addProperty("message.action.killed", "杀死了");
+        translations.addProperty("message.action.killed_by", "被杀死");
+        translations.addProperty("message.action.custom", "达成了里程碑");
+        translations.addProperty("message.you", "你");
+        translations.addProperty("message.have", "");
+        translations.addProperty("message.plural", "");
+        translations.addProperty("message.exclamation", "！");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "已设置游戏时间显示在%s");

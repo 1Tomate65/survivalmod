@@ -1,88 +1,162 @@
 package de.tomate65.survivalmod.manager;
 
+import com.google.gson.*;
 import de.tomate65.survivalmod.config.ConfigGenerator;
-import de.tomate65.survivalmod.config.ConfigReader;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static de.tomate65.survivalmod.Survivalmod.ModVersion;
 
 public class UpdateHelper {
-    private static final File CONFIG_ROOT = new File(FabricLoader.getInstance().getConfigDir().toFile(), "survival");
+    // Shared constants
+    static final File CONFIG_ROOT = new File(FabricLoader.getInstance().getConfigDir().toFile(), "survival");
     private static final String CURRENT_VERSION = ModVersion;
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final List<String> MODIFIABLE_CONFIGS = Arrays.asList("toggle.json", "survival.json", "conf.json");
 
-    public static void checkAndUpdateConfigs() {
-        String configVersion = ConfigReader.getModVersion();
+    // Version migration core methods
+    static void migrateConfigs(String fromVersion, String toVersion) throws IOException {
+        File fromDir = new File(CONFIG_ROOT, fromVersion);
+        File toDir = new File(CONFIG_ROOT, toVersion);
 
-        if (!configVersion.equals(CURRENT_VERSION)) {
-            System.out.println("[SurvivalMod] Config version (" + configVersion + ") doesn't match mod version (" + CURRENT_VERSION + "). Migrating configs...");
+        if (!fromDir.exists()) {
+            throw new IOException("Source version directory doesn't exist: " + fromDir);
+        }
 
-            File oldVersionFolder = new File(CONFIG_ROOT, configVersion);
-            if (!oldVersionFolder.exists()) {
-                oldVersionFolder.mkdirs();
+        if (!toDir.exists()) {
+            toDir.mkdirs();
+        }
+
+        ConfigGenerator.generateConfigs();
+
+        // Merge modifiable configs
+        for (String configName : MODIFIABLE_CONFIGS) {
+            File oldConfig = new File(fromDir, configName);
+            File newConfig = new File(toDir, configName);
+            if (oldConfig.exists()) {
+                if (newConfig.exists()) {
+                    mergeConfigs(oldConfig, newConfig);
+                } else {
+                    Files.copy(oldConfig.toPath(), newConfig.toPath());
+                }
             }
+        }
 
-            File newVersionFolder = new File(CONFIG_ROOT, CURRENT_VERSION);
-            if (!newVersionFolder.exists()) {
-                newVersionFolder.mkdirs();
+        // Copy non-modifiable files
+        File[] filesToCopy = fromDir.listFiles();
+        if (filesToCopy != null) {
+            for (File sourceFile : filesToCopy) {
+                String fileName = sourceFile.getName();
+                if (!MODIFIABLE_CONFIGS.contains(fileName)) {
+                    Files.copy(
+                            sourceFile.toPath(),
+                            new File(toDir, fileName).toPath(),
+                            StandardCopyOption.REPLACE_EXISTING
+                    );
+                }
             }
-
-            moveConfigsToVersionedFolder(oldVersionFolder);
-
-            ConfigGenerator.generateConfigs();
-            ConfigReader.loadConfig();
         }
     }
 
-    private static void moveConfigsToVersionedFolder(File versionFolder) {
-        try {
-            try (Stream<Path> paths = Files.list(CONFIG_ROOT.toPath())) {
-                paths.filter(path -> {
-                    String fileName = path.getFileName().toString();
-                    return !fileName.matches("\\d+\\.\\d+\\.\\d+.*") &&
-                            !fileName.equals("survival") &&
-                            !path.toFile().isDirectory();
-                }).forEach(path -> {
-                    try {
-                        Files.move(path, versionFolder.toPath().resolve(path.getFileName()),
-                                StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException e) {
-                        System.err.println("[SurvivalMod] Failed to move config file: " + path);
-                        e.printStackTrace();
-                    }
-                });
-            }
+    private static void mergeConfigs(File oldConfig, File newConfig) throws IOException {
+        JsonObject oldJson = JsonParser.parseReader(new FileReader(oldConfig)).getAsJsonObject();
+        JsonObject newJson = JsonParser.parseReader(new FileReader(newConfig)).getAsJsonObject();
 
-            File playerDataFolder = new File(CONFIG_ROOT, "Playerdata");
-            if (playerDataFolder.exists()) {
-                Files.move(playerDataFolder.toPath(), versionFolder.toPath().resolve("Playerdata"),
-                        StandardCopyOption.REPLACE_EXISTING);
+        for (String key : oldJson.keySet()) {
+            if (!newJson.has(key)) {
+                newJson.add(key, oldJson.get(key));
+            } else if (oldJson.get(key).isJsonObject() && newJson.get(key).isJsonObject()) {
+                mergeJsonObjects(oldJson.getAsJsonObject(key), newJson.getAsJsonObject(key));
             }
+        }
 
-            File recipeFolder = new File(CONFIG_ROOT, "recipe");
-            if (recipeFolder.exists()) {
-                Files.move(recipeFolder.toPath(), versionFolder.toPath().resolve("recipe"),
-                        StandardCopyOption.REPLACE_EXISTING);
-            }
+        try (FileWriter writer = new FileWriter(newConfig)) {
+            GSON.toJson(newJson, writer);
+        }
+    }
 
-            File langFolder = new File(CONFIG_ROOT, "lang");
-            if (langFolder.exists()) {
-                Files.move(langFolder.toPath(), versionFolder.toPath().resolve("lang"),
-                        StandardCopyOption.REPLACE_EXISTING);
+    private static void mergeJsonObjects(JsonObject source, JsonObject target) {
+        for (String key : source.keySet()) {
+            if (!target.has(key)) {
+                target.add(key, source.get(key));
+            } else if (source.get(key).isJsonObject() && target.get(key).isJsonObject()) {
+                mergeJsonObjects(source.getAsJsonObject(key), target.getAsJsonObject(key));
             }
-        } catch (IOException e) {
-            System.err.println("[SurvivalMod] Error during config migration:");
-            e.printStackTrace();
+        }
+    }
+
+    static String findHighestExistingVersion(List<String> versions) {
+        File[] versionDirs = CONFIG_ROOT.listFiles(File::isDirectory);
+        if (versionDirs == null || versionDirs.length == 0) return null;
+
+        return Arrays.stream(versionDirs)
+                .map(File::getName)
+                .filter(versions::contains)
+                .max(Comparator.comparingInt(versions::indexOf))
+                .orElse(null);
+    }
+
+    static void moveConfigsToVersionedFolder(File versionFolder) throws IOException {
+        try (Stream<Path> paths = Files.list(CONFIG_ROOT.toPath())) {
+            paths.filter(path -> {
+                String fileName = path.getFileName().toString();
+                return !fileName.matches("\\d+\\.\\d+\\.\\d+.*")
+                        && !fileName.equals("survival")
+                        && !path.toFile().isDirectory();
+            }).forEach(path -> {
+                try {
+                    Files.move(
+                            path,
+                            versionFolder.toPath().resolve(path.getFileName()),
+                            StandardCopyOption.REPLACE_EXISTING
+                    );
+                } catch (IOException e) {
+                    System.err.println("[SurvivalMod] Failed to move config file: " + path);
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        // Move special folders
+        moveSpecialFolder(versionFolder, "Playerdata");
+        moveSpecialFolder(versionFolder, "recipe");
+        moveSpecialFolder(versionFolder, "lang");
+    }
+
+    private static void moveSpecialFolder(File versionFolder, String folderName) throws IOException {
+        File folder = new File(CONFIG_ROOT, folderName);
+        if (folder.exists()) {
+            Files.move(
+                    folder.toPath(),
+                    versionFolder.toPath().resolve(folderName),
+                    StandardCopyOption.REPLACE_EXISTING
+            );
         }
     }
 
     public static String getCurrentVersion() {
         return CURRENT_VERSION;
+    }
+
+    public static void migrateThroughVersions(String fromVersion) throws IOException {
+        List<String> versions = Arrays.asList(ConfigGenerator.VERSIONS);
+        String currentVersion = getCurrentVersion();
+
+        int currentIndex = versions.indexOf(currentVersion);
+        int existingIndex = versions.indexOf(fromVersion);
+
+        if (existingIndex < 0 || currentIndex < 0) {
+            throw new IOException("Version not found in migration path");
+        }
+
+        for (int i = existingIndex; i < currentIndex; i++) {
+            String sourceVersion = versions.get(i);
+            String targetVersion = versions.get(i + 1);
+            migrateConfigs(sourceVersion, targetVersion);
+        }
     }
 }

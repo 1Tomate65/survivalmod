@@ -39,6 +39,24 @@ public class NlNlTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "Beschikbare talen: %s");
         translations.addProperty("command.hex_format", "Hex formaat kan RRGGBB of #RRGGBB zijn");
         translations.addProperty("command.reset_partial", "Je %s instellingen zijn gewist");
+        translations.addProperty("command.set_usage.title", "=== Gebruik van Set Commando ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <object_id>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <statistieken_categorie>");
+
+        translations.addProperty("message.action.mined", "gedolven");
+        translations.addProperty("message.action.crafted", "gemaakt");
+        translations.addProperty("message.action.used", "gebruikt");
+        translations.addProperty("message.action.broken", "gebroken");
+        translations.addProperty("message.action.picked_up", "opgepakt");
+        translations.addProperty("message.action.dropped", "laten vallen");
+        translations.addProperty("message.action.killed", "gedood");
+        translations.addProperty("message.action.killed_by", "gedood door");
+        translations.addProperty("message.action.custom", "een mijlpaal bereikt in");
+        translations.addProperty("message.you", "Je hebt");
+        translations.addProperty("message.have", "");
+        translations.addProperty("message.plural", "s");
+        translations.addProperty("message.exclamation", "!");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "Speeltijd ingesteld om weer te geven in %s");

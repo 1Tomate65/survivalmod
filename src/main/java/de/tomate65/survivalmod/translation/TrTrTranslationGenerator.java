@@ -39,6 +39,24 @@ public class TrTrTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "Kullanılabilir diller: %s");
         translations.addProperty("command.hex_format", "Hex formatı RRGGBB veya #RRGGBB olabilir");
         translations.addProperty("command.reset_partial", "%s ayarlarınız temizlendi");
+        translations.addProperty("command.set_usage.title", "=== Set Komutu Kullanımı ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <nesne_id>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <istatistik_kategorisi>");
+
+        translations.addProperty("message.action.mined", "kazdı");
+        translations.addProperty("message.action.crafted", "üretti");
+        translations.addProperty("message.action.used", "kullandı");
+        translations.addProperty("message.action.broken", "kırdı");
+        translations.addProperty("message.action.picked_up", "aldı");
+        translations.addProperty("message.action.dropped", "bıraktı");
+        translations.addProperty("message.action.killed", "öldürdü");
+        translations.addProperty("message.action.killed_by", "tarafından öldürüldü");
+        translations.addProperty("message.action.custom", "bir hedefe ulaştı");
+        translations.addProperty("message.you", "Sen");
+        translations.addProperty("message.have", "");
+        translations.addProperty("message.plural", "");
+        translations.addProperty("message.exclamation", "!");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "Oynama süresi %s'de görüntülenecek şekilde ayarlandı");

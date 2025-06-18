@@ -2,7 +2,6 @@ package de.tomate65.survivalmod.config;
 
 import com.google.gson.*;
 import de.tomate65.survivalmod.manager.MagnetManager;
-
 import java.io.*;
 import java.util.*;
 
@@ -12,7 +11,7 @@ public class ConfigReader {
     private static final File CONF_CONFIG = new File("config/survival/" + ModVersion + "/conf.json");
     private static final File LANG_DIR = new File("config/survival/" + ModVersion + "/lang");
 
-    // Configuration values with defaults
+    // Config values with defaults
     private static boolean toggleCommandEnabled = true;
     private static boolean invertToggleFile = false;
     private static int chatMsgFrequency = 10;
@@ -25,21 +24,19 @@ public class ConfigReader {
     private static String defaultMaterialColor = "GRAY";
     private static String defaultNumberColor = "GOLD";
     private static String defaultTimeColor = "AQUA";
-
     public static final Map<String, Map<String, String>> translations = new HashMap<>();
 
     public static void loadConfig() {
-        loadConfConfig();
+        JsonObject config = loadConfConfig();
         loadLanguageToggleConfig();
         loadTranslations();
     }
 
-    private static void loadConfConfig() {
-        if (!CONF_CONFIG.exists()) return;
+    private static JsonObject loadConfConfig() {
+        if (!CONF_CONFIG.exists()) return null;
 
         try (FileReader reader = new FileReader(CONF_CONFIG)) {
             JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
-
             modVersion = config.get("ModVersion").getAsString();
 
             // Load basic settings
@@ -47,55 +44,49 @@ public class ConfigReader {
             toggleCommandEnabled = config.get("Toggle Command").getAsBoolean();
             defaultStatCategory = config.get("Default Statistik Category").getAsString();
 
-
-            // Load toggle mode
+            // Optional settings
             if (config.has("InvertToggleFile")) {
                 invertToggleFile = config.get("InvertToggleFile").getAsBoolean();
             }
 
-            // Load colors
+            // Color settings
             defaultTextColor = config.get("default_text_color").getAsString();
             defaultCategoryColor = config.get("default_category_color").getAsString();
             defaultMaterialColor = config.get("default_material_color").getAsString();
             defaultNumberColor = config.get("default_number_color").getAsString();
             defaultTimeColor = config.get("default_time_color").getAsString();
 
+            // Magnet settings
+            JsonObject magnetSettings = config.has("magnet")
+                    ? config.getAsJsonObject("magnet")
+                    : new JsonObject();
+            MagnetManager.setConfigValues(
+                    magnetSettings.has("enabled") && magnetSettings.get("enabled").getAsBoolean(),
+                    magnetSettings.has("hungerStrength") ? magnetSettings.get("hungerStrength").getAsInt() : 5,
+                    magnetSettings.has("radius") ? magnetSettings.get("radius").getAsInt() : 5
+            );
 
-
-            // Load magnet settings
-            JsonObject magnetSettings = config.has("magnet") ? config.getAsJsonObject("magnet") : new JsonObject();
-            boolean allowMagnet = magnetSettings.has("enabled") && magnetSettings.get("enabled").getAsBoolean();
-            int hungerStrength = magnetSettings.has("hungerStrength") ? magnetSettings.get("hungerStrength").getAsInt() : 5;
-            int radius = magnetSettings.has("radius") ? magnetSettings.get("radius").getAsInt() : 5;
-            MagnetManager.setConfigValues(allowMagnet, hungerStrength, radius);
-
+            return config;
         } catch (Exception e) {
             System.err.println("Error reading conf config: " + e.getMessage());
+            return null;
         }
     }
 
     private static void loadTranslations() {
         translations.clear();
         File[] langFiles = LANG_DIR.listFiles((dir, name) -> name.endsWith(".json"));
-        if (langFiles == null) {
-            System.err.println("No language files found in: " + LANG_DIR.getAbsolutePath());
-            return;
-        }
+        if (langFiles == null) return;
 
-        System.out.println("Loading " + langFiles.length + " language files");
         for (File langFile : langFiles) {
             String langCode = langFile.getName().replace(".json", "");
-            System.out.println("Loading language: " + langCode);
             try (FileReader reader = new FileReader(langFile)) {
                 JsonObject langData = JsonParser.parseReader(reader).getAsJsonObject();
                 Map<String, String> langMap = new HashMap<>();
-
-                for (Map.Entry<String, JsonElement> entry : langData.entrySet()) {
-                    langMap.put(entry.getKey(), entry.getValue().getAsString());
-                }
-
+                langData.entrySet().forEach(entry ->
+                        langMap.put(entry.getKey(), entry.getValue().getAsString())
+                );
                 translations.put(langCode, langMap);
-                System.out.println("Loaded " + langMap.size() + " translations for " + langCode);
             } catch (Exception e) {
                 System.err.println("Error loading language file: " + langFile.getName());
                 e.printStackTrace();
@@ -103,19 +94,28 @@ public class ConfigReader {
         }
     }
 
-    public static Set<String> getAvailableLanguages() {
-        return translations.keySet();
-    }
+    private static void loadLanguageToggleConfig() {
+        File toggleFile = new File(LANG_DIR, "language_files_toggle.json");
+        if (!toggleFile.exists()) return;
 
-    public static String translate(String key, String langCode) {
-        Map<String, String> lang = translations.getOrDefault(langCode, translations.get(defaultLanguage));
-        return lang != null ? lang.getOrDefault(key, key) : key;
+        try (FileReader reader = new FileReader(toggleFile)) {
+            JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
+            languageToggles.clear();
+            config.entrySet().forEach(entry -> {
+                String code = entry.getKey().contains("_")
+                        ? entry.getKey()
+                        : entry.getKey().replaceAll("([a-z]{2})([a-z]{2})", "$1_$2");
+                languageToggles.put(code.toLowerCase(), entry.getValue().getAsBoolean());
+            });
+        } catch (Exception e) {
+            System.err.println("Error reading language toggle config: " + e.getMessage());
+        }
     }
 
     // Getters
     public static boolean isToggleCommandEnabled() { return toggleCommandEnabled; }
     public static int getChatMsgFrequency() { return chatMsgFrequency; }
-    public static String getModVersion() {return modVersion; }
+    public static String getModVersion() { return modVersion; }
     public static String getDefaultStatCategory() { return defaultStatCategory; }
     public static String getDefaultLanguage() { return defaultLanguage; }
     public static String getDefaultTextColor() { return defaultTextColor; }
@@ -124,52 +124,35 @@ public class ConfigReader {
     public static String getDefaultNumberColor() { return defaultNumberColor; }
     public static boolean isInvertedToggleMode() { return invertToggleFile; }
     public static String getDefaultTimeColor() { return defaultTimeColor; }
+    public static Set<String> getAvailableLanguages() { return translations.keySet(); }
+
     public static boolean isLanguageEnabled(String langCode) {
-        return languageToggles.getOrDefault(langCode, langCode.equals("en_us"));
+        return languageToggles.getOrDefault(
+                langCode.toLowerCase().replace(" ", "_"),
+                langCode.equalsIgnoreCase("en_us")
+        );
     }
 
-    private static void loadLanguageToggleConfig() {
-        File languageToggleFile = new File("config/survival/" + ConfigReader.getModVersion() + "/lang/language_files_toggle.json");
-        if (!languageToggleFile.exists()) return;
-
-        try (FileReader reader = new FileReader(languageToggleFile)) {
-            JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
-            languageToggles.clear();
-
-            for (Map.Entry<String, JsonElement> entry : config.entrySet()) {
-                languageToggles.put(entry.getKey(), entry.getValue().getAsBoolean());
-            }
-        } catch (Exception e) {
-            System.err.println("Error reading language toggle config: " + e.getMessage());
-        }
+    public static String translate(String key, String langCode) {
+        Map<String, String> lang = translations.getOrDefault(
+                langCode,
+                translations.get(defaultLanguage)
+        );
+        return lang != null ? lang.getOrDefault(key, key) : key;
     }
 
     public static boolean isRecipeEnabled(String recipeId) {
-        // Check if the recipe config file exists
-        File recipeConfigFile = new File("config/survival/" + ConfigReader.getModVersion() + "/recipes.json");
-        if (!recipeConfigFile.exists()) {
-            // If config file doesn't exist, enable all recipes by default
-            return true;
-        }
+        File recipeFile = new File("config/survival/" + ModVersion + "/recipes.json");
+        if (!recipeFile.exists()) return true;
 
-        try (FileReader reader = new FileReader(recipeConfigFile)) {
+        try (FileReader reader = new FileReader(recipeFile)) {
             JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
-
-            // Check if there's a specific setting for this recipe
-            if (config.has(recipeId)) {
-                return config.get(recipeId).getAsBoolean();
-            }
-
-            // Check for a global "all_recipes" setting
-            if (config.has("all_recipes")) {
-                return config.get("all_recipes").getAsBoolean();
-            }
-
-            // Default to enabled if no specific setting exists
+            if (config.has(recipeId)) return config.get(recipeId).getAsBoolean();
+            if (config.has("all_recipes")) return config.get("all_recipes").getAsBoolean();
             return true;
         } catch (Exception e) {
             System.err.println("Error reading recipe config: " + e.getMessage());
-            return true; // Default to enabled if there's an error
+            return true;
         }
     }
 }

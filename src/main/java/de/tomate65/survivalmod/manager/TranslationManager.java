@@ -42,9 +42,12 @@ public class TranslationManager {
     }
 
     private static String getLangCodeFromGenerator(TranslationGenerator generator) {
-        // Extract language code from class name (e.g., "EnUsTranslationGenerator" -> "en_us")
+        // Convert class name like "EnUsTranslationGenerator" to "en_us"
         String className = generator.getClass().getSimpleName();
-        return className.replace("TranslationGenerator", "").toLowerCase();
+        String code = className.replace("TranslationGenerator", "");
+        // Insert underscore between lowercase and uppercase letters
+        code = code.replaceAll("([a-z])([A-Z])", "$1_$2");
+        return code.toLowerCase();
     }
 
     public static List<String> getAvailableLanguageCodes() {

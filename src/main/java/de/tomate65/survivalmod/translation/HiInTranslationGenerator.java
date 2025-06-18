@@ -39,6 +39,24 @@ public class HiInTranslationGenerator extends TranslationGenerator {
         translations.addProperty("command.available_languages", "उपलब्ध भाषाएँ: %s");
         translations.addProperty("command.hex_format", "हेक्स प्रारूप RRGGBB या #RRGGBB हो सकता है");
         translations.addProperty("command.reset_partial", "आपकी %s सेटिंग्स साफ़ हो गईं");
+        translations.addProperty("command.set_usage.title", "=== सेट कमांड उपयोग ===");
+        translations.addProperty("command.set_usage.object", "/toggle set object <वस्तु_आईडी>");
+        translations.addProperty("command.set_usage.location", "/toggle set location <actionbar|chat|title>");
+        translations.addProperty("command.set_usage.category", "/toggle set category <सांख्यिकी_श्रेणी>");
+
+        translations.addProperty("message.action.mined", "खोदा");
+        translations.addProperty("message.action.crafted", "बनाया");
+        translations.addProperty("message.action.used", "इस्तेमाल किया");
+        translations.addProperty("message.action.broken", "तोड़ा");
+        translations.addProperty("message.action.picked_up", "उठाया");
+        translations.addProperty("message.action.dropped", "गिराया");
+        translations.addProperty("message.action.killed", "को मारा");
+        translations.addProperty("message.action.killed_by", "द्वारा मारे गए");
+        translations.addProperty("message.action.custom", "में एक मील का पत्थर हासिल किया");
+        translations.addProperty("message.you", "आपने");
+        translations.addProperty("message.have", "");
+        translations.addProperty("message.plural", "");
+        translations.addProperty("message.exclamation", "!");
 
         // Command success messages
         translations.addProperty("timeplayed.set", "टाइमप्लेयड %s में प्रदर्शित होगा");
