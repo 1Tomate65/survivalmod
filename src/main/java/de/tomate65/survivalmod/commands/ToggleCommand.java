@@ -45,7 +45,7 @@ public class ToggleCommand {
             "WHITE", "BROWN", "NONE"
     };
 
-    private static final SuggestionProvider<ServerCommandSource> LANGUAGE_SUGGESTIONS = (context, builder) -> {
+    public static final SuggestionProvider<ServerCommandSource> LANGUAGE_SUGGESTIONS = (context, builder) -> {
         ConfigReader.getAvailableLanguages().stream()
                 .filter(ConfigReader::isLanguageEnabled)
                 .forEach(builder::suggest);
@@ -350,11 +350,11 @@ public class ToggleCommand {
                                         context,
                                         BoolArgumentType.getBool(context, "state")
                                 ))))
-                        .then(literal("language")
-                                .executes(context -> showLanguageUsage(context))
-                                .then(argument("lang", StringArgumentType.word())
-                                        .suggests(LANGUAGE_SUGGESTIONS)
-                                        .executes(context -> setPlayerLanguage(context, StringArgumentType.getString(context, "lang"))))));
+                .then(literal("language")
+                       .executes(context -> showLanguageUsage(context))
+                       .then(argument("lang", StringArgumentType.word())
+                               .suggests(LANGUAGE_SUGGESTIONS)
+                               .executes(context -> setPlayerLanguage(context, StringArgumentType.getString(context, "lang"))))));
 
         Set<String> togglesToRegister = ConfigReader.isInvertedToggleMode() ?
                 new HashSet<>(getAllAvailableToggles()) {{
@@ -678,7 +678,7 @@ public class ToggleCommand {
         return 1;
     }
 
-    private static int showLanguageUsage(CommandContext<ServerCommandSource> context) {
+    public static int showLanguageUsage(CommandContext<ServerCommandSource> context) {
         String enabledLanguages = ConfigReader.getAvailableLanguages().stream()
                 .filter(ConfigReader::isLanguageEnabled)
                 .collect(Collectors.joining(", "));
@@ -775,7 +775,7 @@ public class ToggleCommand {
         }
     }
 
-    private static int setPlayerLanguage(CommandContext<ServerCommandSource> context, String language) {
+    public static int setPlayerLanguage(CommandContext<ServerCommandSource> context, String language) {
         ServerPlayerEntity player = getPlayerOrError(context);
         if (player == null) return 0;
 

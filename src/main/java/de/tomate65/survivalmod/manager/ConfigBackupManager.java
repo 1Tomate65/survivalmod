@@ -75,6 +75,9 @@ public class ConfigBackupManager {
             }
         }
 
+
+        System.out.println("[DEBUG] configVersion = " + configVersion);
+        System.out.println("[DEBUG] currentVersion = " + currentVersion);
         ConfigReader.loadConfig();
     }
 
@@ -143,6 +146,7 @@ public class ConfigBackupManager {
             setRestrictedPermissions(backupFile);
             updateLastBackupTimestamp();
             System.out.println("[DEBUG] Backup completed successfully");
+            cleanOldBackups();
         }
     }
 
@@ -150,10 +154,11 @@ public class ConfigBackupManager {
         File[] backups = backupRoot.listFiles((dir, name) ->
                 name.startsWith(backupPrefix) && name.endsWith(backupExt));
 
-        if (backups != null && backups.length >= maxBackups) {
+        if (backups != null && backups.length > maxBackups) {
             Arrays.sort(backups, Comparator.comparingLong(File::lastModified));
-            for (int i = 0; i <= backups.length - maxBackups; i++) {
-                Files.delete(backups[i].toPath());
+            int toDelete = backups.length - maxBackups;
+            for (int i = 0; i < toDelete; i++) {
+                Files.deleteIfExists(backups[i].toPath());
             }
         }
     }

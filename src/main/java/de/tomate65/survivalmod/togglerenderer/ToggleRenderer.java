@@ -261,6 +261,16 @@ public class ToggleRenderer {
         };
     }
 
+    public File getPlayerDataFile(UUID playerId) {
+        File versionedFile = new File("config/survival/" + ModVersion + "/Playerdata/" + playerId + ".json");
+        if (versionedFile.exists()) return versionedFile;
+
+        File legacyFile = new File("config/survival/Playerdata/" + playerId + ".json");
+        if (legacyFile.exists()) return legacyFile;
+
+        return versionedFile;
+    }
+
     public static String getPlayerLanguage(ServerPlayerEntity player) {
         PlayerToggleData data = getPlayerData(player);
         return data != null && data.language != null ? data.language : ConfigReader.getDefaultLanguage();

@@ -31,9 +31,6 @@ public class UpdateHelper {
             toDir.mkdirs();
         }
 
-        ConfigGenerator.generateConfigs();
-
-        // Merge modifiable configs
         for (String configName : MODIFIABLE_CONFIGS) {
             File oldConfig = new File(fromDir, configName);
             File newConfig = new File(toDir, configName);
@@ -46,7 +43,6 @@ public class UpdateHelper {
             }
         }
 
-        // Copy non-modifiable files
         File[] filesToCopy = fromDir.listFiles();
         if (filesToCopy != null) {
             for (File sourceFile : filesToCopy) {
@@ -89,18 +85,20 @@ public class UpdateHelper {
         }
     }
 
-    static String findHighestExistingVersion(List<String> versions) {
-        File[] versionDirs = CONFIG_ROOT.listFiles(File::isDirectory);
-        if (versionDirs == null || versionDirs.length == 0) return null;
+    public static String findHighestExistingVersion(List<String> versions) {
+        File configRoot = new File(FabricLoader.getInstance().getConfigDir().toFile(), "survival");
+        String highestVersion = null;
 
-        return Arrays.stream(versionDirs)
-                .map(File::getName)
-                .filter(versions::contains)
-                .max(Comparator.comparingInt(versions::indexOf))
-                .orElse(null);
+        for (String version : versions) {
+            File versionDir = new File(configRoot, version);
+            if (versionDir.exists() && versionDir.isDirectory()) {
+                highestVersion = version;
+            }
+        }
+        return highestVersion;
     }
 
-    static void moveConfigsToVersionedFolder(File versionFolder) throws IOException {
+    public static void moveConfigsToVersionedFolder(File versionFolder) throws IOException {
         try (Stream<Path> paths = Files.list(CONFIG_ROOT.toPath())) {
             paths.filter(path -> {
                 String fileName = path.getFileName().toString();
@@ -121,10 +119,10 @@ public class UpdateHelper {
             });
         }
 
-        // Move special folders
         moveSpecialFolder(versionFolder, "Playerdata");
         moveSpecialFolder(versionFolder, "recipe");
-        moveSpecialFolder(versionFolder, "lang");
+
+        System.out.println("[DEBUG] Moving configs to versioned folder: " + versionFolder.getName());
     }
 
     private static void moveSpecialFolder(File versionFolder, String folderName) throws IOException {
@@ -153,10 +151,21 @@ public class UpdateHelper {
             throw new IOException("Version not found in migration path");
         }
 
-        for (int i = existingIndex; i < currentIndex; i++) {
-            String sourceVersion = versions.get(i);
-            String targetVersion = versions.get(i + 1);
-            migrateConfigs(sourceVersion, targetVersion);
+
+        // Create target version directory first
+        File targetVersionFolder = new File(CONFIG_ROOT, currentVersion);
+        if (!targetVersionFolder.exists()) {
+            targetVersionFolder.mkdirs();
+
+            // Only move old configs if they exist in source version folder
+            File sourceVersionFolder = new File(CONFIG_ROOT, fromVersion);
+            if (sourceVersionFolder.exists()) {
+                migrateConfigs(fromVersion, currentVersion);
+                moveConfigsToVersionedFolder(targetVersionFolder);
+            }
+
+            // Generate new configs after migration
+            ConfigGenerator.generateConfigs();
         }
     }
 }

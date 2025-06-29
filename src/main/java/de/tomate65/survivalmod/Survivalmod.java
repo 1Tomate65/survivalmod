@@ -9,6 +9,7 @@ import de.tomate65.survivalmod.config.ConfigReader;
 import de.tomate65.survivalmod.manager.ConfigBackupManager;
 import de.tomate65.survivalmod.manager.MagnetManager;
 import de.tomate65.survivalmod.manager.RecipeHandler;
+import de.tomate65.survivalmod.manager.UpdateHelper;
 import de.tomate65.survivalmod.togglerenderer.ToggleRenderer;
 import de.tomate65.survivalmod.togglerenderer.ToggleRenderer.PlayerToggleData;
 import net.fabricmc.api.ModInitializer;
@@ -33,10 +34,24 @@ public class Survivalmod implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		LOGGER.info("Survival Mod started to initialize!");
+
+		ConfigBackupManager.getInstance().checkAndUpdateConfigs(); // << sofort aufrufen
+
+		// 2. Migration
+		String oldVersion = ConfigReader.getModVersion();
+		if (!oldVersion.equals(ModVersion)) {
+			try {
+				UpdateHelper.migrateThroughVersions(oldVersion);
+				LOGGER.info("[SurvivalMod] Migration von {} nach {} abgeschlossen.", oldVersion, ModVersion);
+			} catch (IOException e) {
+				LOGGER.error("[SurvivalMod] Migration fehlgeschlagen: {}", e.getMessage());
+			}
+		}
+
+		// 3. Jetzt Configs und Rezepte erzeugen
 		ConfigGenerator.generateConfigs();
-
 		ConfigReader.loadConfig();
-
 		RecipeHandler.initialize();
 
 		SurvivalCommand.register();

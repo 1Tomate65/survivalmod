@@ -8,7 +8,7 @@ import de.tomate65.survivalmod.recipes.RecipeGenerator;
 import java.io.*;
 import java.util.List;
 
-import static de.tomate65.survivalmod.Survivalmod.ModVersion; // <-- this is the current Version, 0.3.0
+import static de.tomate65.survivalmod.Survivalmod.ModVersion;
 
 public class ConfigGenerator {
     private static final File CONFIG_DIR = new File("config/survival/" + ModVersion);
@@ -19,23 +19,43 @@ public class ConfigGenerator {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static final String[] VERSIONS = {
-            ModVersion
+            "0.2.5", "0.3.0"
     };
 
     public static void generateConfigs() {
-        createDirectory(CONFIG_DIR);
-        createDirectory(LANG_DIR);
+        File versionFolder = new File(CONFIG_DIR.getParentFile(), ModVersion);
+        if (!versionFolder.exists()) {
+            try {
+                UpdateHelper.moveConfigsToVersionedFolder(versionFolder);
+            } catch (IOException e) {
+                System.err.println("Failed to move configs to versioned folder: " + e.getMessage());
+            }
+        }
 
-        // Generate language toggle config first
         generateLanguageToggleConfig();
-
         generateSurvivalConfig();
         generateToggleConfig();
         generateConfConfig();
         RecipeGenerator.generateAllRecipes(new File("config/survival/" + ModVersion + "/recipe"));
         TranslationManager.generateAllTranslations(LANG_DIR);
 
-        ConfigReader.loadConfig();
+        updateConfigVersion();
+
+        System.out.println("Configs Generated");
+    }
+
+    private static void updateConfigVersion() {
+        try {
+            if (CONF_CONFIG.exists()) {
+                JsonObject config = JsonParser.parseReader(new FileReader(CONF_CONFIG)).getAsJsonObject();
+                config.addProperty("ModVersion", ModVersion);
+                try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
+                    GSON.toJson(config, writer);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error updating config version: " + e.getMessage());
+        }
     }
 
 
@@ -120,40 +140,73 @@ public class ConfigGenerator {
     }
 
     private static void generateConfConfig() {
-        if (!CONF_CONFIG.exists()) {
-            try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
-                JsonObject config = new JsonObject();
+        try {
+            // 1. Erstelle immer eine Vorlage mit den neuesten Standardwerten im Speicher
+            JsonObject defaultConfig = new JsonObject();
+            defaultConfig.addProperty("ModVersion", ModVersion);
+            defaultConfig.addProperty("ChatMsgFrequency", 10);
+            defaultConfig.addProperty("Toggle Command", true);
+            defaultConfig.addProperty("Default Statistik Category", "mined");
+            defaultConfig.addProperty("InvertToggleFile", false);
 
-                config.addProperty("ModVersion", ModVersion);
+            JsonObject magnetSettings = new JsonObject();
+            magnetSettings.addProperty("enabled", false);
+            magnetSettings.addProperty("hungerStrength", 5);
+            magnetSettings.addProperty("radius", 5);
+            defaultConfig.add("magnet", magnetSettings);
 
-                // Toggle Settings
-                config.addProperty("ChatMsgFrequency", 10);
-                config.addProperty("Toggle Command", true);
-                config.addProperty("Default Statistik Category", "mined");
-                config.addProperty("InvertToggleFile", false);
+            // Der neue Block, der hinzugefügt werden soll!
+            JsonObject backupSettings = new JsonObject();
+            backupSettings.addProperty("enabled", true); // Standardwerte hier definieren
+            backupSettings.addProperty("maxBackups", 5);
+            backupSettings.addProperty("minBackupIntervalHours", 24);
+            backupSettings.addProperty("backupOnVersionChange", true);
+            defaultConfig.add("backup", backupSettings);
 
-                // Magnet settings
-                JsonObject magnetSettings = new JsonObject();
-                magnetSettings.addProperty("enabled", false);
-                magnetSettings.addProperty("hungerStrength", 5);
-                magnetSettings.addProperty("radius", 5);
-                config.add("magnet", magnetSettings);
+            JsonObject config = defaultConfig;
+            // Color settings
+            defaultConfig.addProperty("default_text_color", "GRAY");
+            defaultConfig.addProperty("default_category_color", "GRAY");
+            defaultConfig.addProperty("default_material_color", "GRAY");
+            defaultConfig.addProperty("default_number_color", "GOLD");
+            defaultConfig.addProperty("default_time_color", "AQUA");
 
-                // Color settings
-                config.addProperty("default_text_color", "GRAY");
-                config.addProperty("default_category_color", "GRAY");
-                config.addProperty("default_material_color", "GRAY");
-                config.addProperty("default_number_color", "GOLD");
-                config.addProperty("default_time_color", "AQUA");
+// Kommentare
+            defaultConfig.addProperty("#1", "Valid stats: mined, crafted, used, broken, picked_up, dropped");
+            defaultConfig.addProperty("#2", "InvertToggleFile: true makes toggle.json a blocklist instead of allowlist");
 
-                // Comments
-                config.addProperty("#1", "Valid stats: mined, crafted, used, broken, picked_up, dropped");
-                config.addProperty("#2", "InvertToggleFile: true makes toggle.json a blocklist instead of allowlist");
 
-                writer.write(GSON.toJson(config));
-            } catch (IOException e) {
-                System.err.println("Error creating conf config: " + e.getMessage());
+            // 2. Lade die bestehende Konfigurationsdatei, falls sie existiert
+            JsonObject existingConfig = new JsonObject();
+            if (CONF_CONFIG.exists()) {
+                try (FileReader reader = new FileReader(CONF_CONFIG)) {
+                    existingConfig = JsonParser.parseReader(reader).getAsJsonObject();
+                }
             }
+            // 3. Verschmelze die bestehende Konfiguration mit der neuen Vorlage
+            mergeJsonObjects(defaultConfig, existingConfig);
+            defaultConfig.addProperty("ModVersion", ModVersion); // Sicherstellen, dass die Version immer aktuell ist
+
+            // 4. Schreibe die vollständige, aktualisierte Konfiguration zurück in die Datei
+            try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
+                GSON.toJson(defaultConfig, writer);
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error creating or updating conf config: " + e.getMessage());
+        }
+    }
+
+    private static void mergeJsonObjects(JsonObject target, JsonObject source) {
+        for (String key : source.keySet()) {
+            if (target.has(key)) {
+                if (target.get(key).isJsonObject() && source.get(key).isJsonObject()) {
+                    mergeJsonObjects(target.getAsJsonObject(key), source.getAsJsonObject(key));
+                } else {
+                    target.add(key, source.get(key));
+                }
+            }
+
         }
     }
 
@@ -165,7 +218,6 @@ public class ConfigGenerator {
                 List<String> languageCodes = TranslationManager.getAvailableLanguageCodes();
 
                 for (String langCode : languageCodes) {
-                    // Use the proper underscored codes from TranslationManager
                     boolean isDefault = langCode.equals(ConfigReader.getDefaultLanguage());
                     config.addProperty(langCode, isDefault);
                 }

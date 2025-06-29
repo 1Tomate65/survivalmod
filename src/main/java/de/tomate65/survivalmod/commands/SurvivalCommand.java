@@ -6,6 +6,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import de.tomate65.survivalmod.config.ConfigReader;
 import de.tomate65.survivalmod.manager.ConfigBackupManager;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import static de.tomate65.survivalmod.commands.ToggleCommand.*;
+import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class SurvivalCommand {
@@ -61,9 +64,14 @@ public class SurvivalCommand {
                         .then(literal("autoupdate")
                                 .requires(source -> source.hasPermissionLevel(4)) // High permission level
                                 .executes(SurvivalCommand::executeAutoUpdate))
-        );
 
-        // Register all subcommands from config
+                        .then(literal("language")
+                                .executes(context -> showLanguageUsage(context))
+                                .then(argument("lang", StringArgumentType.word())
+                                        .suggests(LANGUAGE_SUGGESTIONS)
+                                        .executes(context -> setPlayerLanguage(context, StringArgumentType.getString(context, "lang"))))));
+
+
         for (String subcommand : subcommands.keySet()) {
             dispatcher.register(
                     literal("survival")
