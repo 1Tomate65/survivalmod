@@ -28,6 +28,7 @@ public class RecipeGenerator {
         helpers.add(new CryingObsidianRecipe());
         helpers.add(new LargeFernRecipe());
         helpers.add(new TallGrassRecipe());
+        helpers.add(new TallDryGrassRecipe());
 
         // Blasting recipes
         helpers.add(new CopperBlockBlastingRecipe());

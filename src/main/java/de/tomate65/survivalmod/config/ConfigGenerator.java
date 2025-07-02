@@ -19,29 +19,42 @@ public class ConfigGenerator {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static final String[] VERSIONS = {
-            "0.2.5", "0.3.0"
+            "0.3.0"
     };
 
     public static void generateConfigs() {
         File versionFolder = new File(CONFIG_DIR.getParentFile(), ModVersion);
-        if (!versionFolder.exists()) {
+        File unversionedConf = new File(CONFIG_DIR.getParentFile(), "conf.json");
+
+       if (!versionFolder.exists() && unversionedConf.exists()) {
             try {
+                versionFolder.mkdirs();
                 UpdateHelper.moveConfigsToVersionedFolder(versionFolder);
             } catch (IOException e) {
                 System.err.println("Failed to move configs to versioned folder: " + e.getMessage());
+                e.printStackTrace();
             }
+        } else if (!versionFolder.exists()) {
+            versionFolder.mkdirs();
         }
 
-        generateLanguageToggleConfig();
+        generateConfConfig();
         generateSurvivalConfig();
         generateToggleConfig();
-        generateConfConfig();
-        RecipeGenerator.generateAllRecipes(new File("config/survival/" + ModVersion + "/recipe"));
+
+        File recipeDir = new File("config/survival/" + ModVersion + "/recipe");
+        if (!recipeDir.exists()) recipeDir.mkdirs();
+
+        if (!LANG_DIR.exists()) LANG_DIR.mkdirs();
+
+        generateLanguageToggleConfig();
+
+        RecipeGenerator.generateAllRecipes(recipeDir);
         TranslationManager.generateAllTranslations(LANG_DIR);
 
         updateConfigVersion();
 
-        System.out.println("Configs Generated");
+        System.out.println("Configs Generated/Updated");
     }
 
     private static void updateConfigVersion() {
@@ -58,84 +71,109 @@ public class ConfigGenerator {
         }
     }
 
-
-    private static void createDirectory(File dir) {
-        if (!dir.exists() && !dir.mkdirs()) {
-            System.err.println("Failed to create directory: " + dir.getAbsolutePath());
-        }
-    }
-
     private static void generateSurvivalConfig() {
-        if (!SURVIVAL_CONFIG.exists()) {
-            try (FileWriter writer = new FileWriter(SURVIVAL_CONFIG)) {
-                JsonObject config = new JsonObject();
-                JsonObject commands = new JsonObject();
-                JsonObject survival = new JsonObject();
+        try {
+            JsonObject defaultConfig = new JsonObject();
+            JsonObject commands = new JsonObject();
+            JsonObject survival = new JsonObject();
 
-                survival.add("rules", createStringArray("No griefing", "Be respectful", "Do not cheat"));
-                survival.add("info", createStringArray("",
-                        "This mod adds: structures, recipes and two commands",
-                        " ",
-                        "Originally created for a private server",
-                        " ",
-                        "The Mod is translated into 13 languages",
-                        "Toggle them with /toggle language language id",
-                        "§cPlease Report any translation error on the Issue page on github",
-                        " ",
-                        "Feel free to suggest improvements"));
-                survival.add("changelog", createStringArray(
-                        "§7§l§nChangelog §8- §60.3.0 The Structure and balancing Update",
-                        "",
-                        "§l§6§nAdditions & Removals",
-                        "§7- §2Added Swiss German as a Translation",
-                        "§7- §2Reworked Config System",
-                        "§7- §2Added Loottables - a complete list on Modrinth",
-                        "§7- §2Redesigned most Structures",
-                        "§7- §2Removed redundant recipes",
-                        "§7- §2Added Tall Dry Grass Recipe",
-                        "§7- §2Balanced nether_shelter_1 to no longer spawn a ``Netherite Axt`` containing Looting 3 as an Enchantment",
-                        "§7- §2Balanced Loottable for most Structures",
-                        "",
-                        "§l§6§nBug Fixes",
-                        "§7- §2Fixed a bug, there in certain languages some translations completely went missing",
-                        "§7- §2Fixed a bug, there the nether shelters spawned on the nether roof",
-                        "§7- §2Fixed a bug, there identical structures spawned right next to each other",
-                        "§7- §2Fixed a bugs, As they came and couldn't be noticed",
-                        "",
-                        "§l§6§nThanks",
-                        "§9A thank you, to Desonetos for translating the language",
-                        "§9A thank you, to This_Pluto for Hearing me out and suggesting and testing unofficial versions",
-                        "§9A thank you, to TheCityCrafter, EinFynn, wchtig_, Fortex and Connplay for reading the Modrinth Description and giveing me feedback",
-                        "even thou I ask you nicely"
+            survival.add("rules", createStringArray("No griefing", "Be respectful", "Do not cheat"));
+            survival.add("info", createStringArray("",
+                    "This mod adds: structures, recipes and two commands",
+                    " ",
+                    "Originally created for a private server",
+                    " ",
+                    "The Mod is translated into 13 languages",
+                    "Toggle them with /toggle language language id",
+                    "§cPlease Report any translation error on the Issue page on github",
+                    " ",
+                    "Feel free to suggest improvements"));
+            survival.add("changelog", createStringArray(
+                    "§7§l§nChangelog §8- §60.3.0 The Structure and balancing Update",
+                    "",
+                    "§l§6§nAdditions & Removals",
+                    "§7- §2Added Swiss German as a Translation",
+                    "§7- §2Reworked Config System",
+                    "§7- §2Added Loottables - a complete list on Modrinth",
+                    "§7- §2Redesigned most Structures",
+                    "§7- §2Removed redundant recipes",
+                    "§7- §2Added Tall Dry Grass Recipe",
+                    "§7- §2Balanced nether_shelter_1 to no longer spawn a ``Netherite Axt`` containing Looting 3 as an Enchantment",
+                    "§7- §2Balanced Loottable for most Structures",
+                    "",
+                    "§l§6§nBug Fixes",
+                    "§7- §2Fixed a bug, there in certain languages some translations completely went missing",
+                    "§7- §2Fixed a bug, there the nether shelters spawned on the nether roof",
+                    "§7- §2Fixed a bug, there identical structures spawned right next to each other",
+                    "§7- §2Fixed a bugs, As they came and couldn't be noticed",
+                    "",
+                    "§l§6§nThanks",
+                    "§9A thank you, to Desonetos for translating the language",
+                    "§9A thank you, to This_Pluto for Hearing me out and suggesting and testing unofficial versions",
+                    "§9A thank you, to TheCityCrafter, EinFynn, wchtig_, Fortex and Connplay for reading the Modrinth Description and giveing me feedback",
+                    "even thou I ask you nicely"
+            ));
+            commands.add("survival", survival);
+            defaultConfig.add("commands", commands);
 
-                ));
+            // 2. Lade die bestehende Nutzer-Konfiguration, falls vorhanden
+            if (SURVIVAL_CONFIG.exists()) {
+                try (FileReader reader = new FileReader(SURVIVAL_CONFIG)) {
+                    JsonObject userConfig = JsonParser.parseReader(reader).getAsJsonObject();
 
-                commands.add("survival", survival);
-                config.add("commands", commands);
+                    // 3. Führe die Konfigurationen zusammen
+                    if (userConfig.has("commands") && userConfig.get("commands").isJsonObject()) {
+                        JsonObject userSurvival = userConfig.getAsJsonObject("commands").getAsJsonObject("survival");
+                        JsonObject defaultSurvival = survival; // Die Vorlage von oben
 
-                writer.write(GSON.toJson(config));
-            } catch (IOException e) {
-                System.err.println("Error creating survival config: " + e.getMessage());
+                        // Gehe die Standard-Schlüssel durch und füge sie nur hinzu, wenn sie beim Nutzer fehlen
+                        for (String key : defaultSurvival.keySet()) {
+                            if (!userSurvival.has(key)) {
+                                userSurvival.add(key, defaultSurvival.get(key));
+                            }
+                        }
+                    }
+                    // Nutze die aktualisierte Nutzer-Konfiguration zum Speichern
+                    defaultConfig = userConfig;
+                }
             }
+
+            // 4. Schreibe die finale (neue oder zusammengeführte) Konfiguration in die Datei
+            try (FileWriter writer = new FileWriter(SURVIVAL_CONFIG)) {
+                GSON.toJson(defaultConfig, writer);
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error creating or updating survival config: " + e.getMessage());
         }
     }
 
     public static void generateToggleConfig() {
-        if (!TOGGLE_CONFIG.exists()) {
-            try (FileWriter writer = new FileWriter(TOGGLE_CONFIG)) {
-                JsonObject config = new JsonObject();
-                JsonArray toggles = new JsonArray();
+        try {
+            // 1. Immer eine Standard-Vorlage im Speicher erstellen
+            JsonObject defaultConfig = new JsonObject();
+            JsonArray defaultToggles = new JsonArray();
+            defaultToggles.add("stone");
+            defaultToggles.add("dirt");
+            defaultToggles.add("oak_log");
+            defaultToggles.add("timeplayed");
+            defaultConfig.add("toggles", defaultToggles);
 
-                toggles.add("stone");
-                toggles.add("dirt");
-                toggles.add("oak_log");
-                toggles.add("timeplayed");
-
-                config.add("toggles", toggles);
-                writer.write(GSON.toJson(config));
-            } catch (IOException e) {
-                System.err.println("Error creating toggle config: " + e.getMessage());
+            // 2. Lade die bestehende Konfigurationsdatei, falls sie existiert
+            if (TOGGLE_CONFIG.exists()) {
+                try (FileReader reader = new FileReader(TOGGLE_CONFIG)) {
+                    // Wenn die Datei existiert, lade sie und nutze sie als Basis
+                    // (In diesem Fall wollen wir die Liste des Nutzers komplett übernehmen)
+                    defaultConfig = JsonParser.parseReader(reader).getAsJsonObject();
+                }
             }
+
+            // 3. Schreibe die (entweder neue oder vom Nutzer geladene) Konfiguration zurück
+            try (FileWriter writer = new FileWriter(TOGGLE_CONFIG)) {
+                writer.write(GSON.toJson(defaultConfig));
+            }
+        } catch (IOException e) {
+            System.err.println("Error creating or updating toggle config: " + e.getMessage());
         }
     }
 
@@ -212,20 +250,28 @@ public class ConfigGenerator {
 
     private static void generateLanguageToggleConfig() {
         File languageToggleFile = new File(LANG_DIR, "language_files_toggle.json");
-        if (!languageToggleFile.exists()) {
-            try (FileWriter writer = new FileWriter(languageToggleFile)) {
-                JsonObject config = new JsonObject();
-                List<String> languageCodes = TranslationManager.getAvailableLanguageCodes();
-
-                for (String langCode : languageCodes) {
-                    boolean isDefault = langCode.equals(ConfigReader.getDefaultLanguage());
-                    config.addProperty(langCode, isDefault);
-                }
-
-                writer.write(GSON.toJson(config));
-            } catch (IOException e) {
-                System.err.println("Error creating language toggle config: " + e.getMessage());
+        try {
+            JsonObject defaultConfig = new JsonObject();
+            List<String> languageCodes = TranslationManager.getAvailableLanguageCodes();
+            for (String langCode : languageCodes) {
+                boolean isDefault = langCode.equals(ConfigReader.getDefaultLanguage());
+                defaultConfig.addProperty(langCode, isDefault);
             }
+            if (languageToggleFile.exists()) {
+                try (FileReader reader = new FileReader(languageToggleFile)) {
+                    JsonObject userConfig = JsonParser.parseReader(reader).getAsJsonObject();
+                    for (String langCode : userConfig.keySet()) {
+                        if (defaultConfig.has(langCode) && userConfig.has(langCode)) {
+                            defaultConfig.addProperty(langCode, userConfig.get(langCode).getAsBoolean());
+                        }
+                    }
+                }
+            }
+            try (FileWriter writer = new FileWriter(languageToggleFile)) {
+                GSON.toJson(defaultConfig, writer);
+            }
+        } catch (IOException e) {
+            System.err.println("Error creating or updating language toggle config: " + e.getMessage());
         }
     }
 

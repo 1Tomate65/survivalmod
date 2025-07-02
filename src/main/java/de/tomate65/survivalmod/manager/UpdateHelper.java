@@ -7,6 +7,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static de.tomate65.survivalmod.Survivalmod.ModVersion;
@@ -99,41 +100,57 @@ public class UpdateHelper {
     }
 
     public static void moveConfigsToVersionedFolder(File versionFolder) throws IOException {
+        System.out.println("[SurvivalMod] Moving unversioned configs to version: " + versionFolder.getName());
+
+        // 1. Spezielle Ordner (Inhalt verschieben)
+        // Korrigierte Kleinschreibung für "playerdata"
+        moveSpecialFolderContents(versionFolder, "playerdata");
+        moveSpecialFolderContents(versionFolder, "recipe");
+        moveSpecialFolderContents(versionFolder, "lang");
+
+        // 2. Alle restlichen losen Dateien verschieben
         try (Stream<Path> paths = Files.list(CONFIG_ROOT.toPath())) {
             paths.filter(path -> {
                 String fileName = path.getFileName().toString();
-                return !fileName.matches("\\d+\\.\\d+\\.\\d+.*")
-                        && !fileName.equals("survival")
-                        && !path.toFile().isDirectory();
+                // Filter, um bereits versionierte Ordner und die speziellen Ordner auszuschließen
+                return !fileName.matches("\\d+\\.\\d+\\.\\d+.*") &&
+                        !fileName.equals("playerdata") &&
+                        !fileName.equals("recipe") &&
+                        !fileName.equals("lang") &&
+                        !Files.isDirectory(path);
             }).forEach(path -> {
                 try {
-                    Files.move(
-                            path,
-                            versionFolder.toPath().resolve(path.getFileName()),
-                            StandardCopyOption.REPLACE_EXISTING
-                    );
+                    Files.move(path, versionFolder.toPath().resolve(path.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+                    System.out.println("[SurvivalMod] Moved file: " + path.getFileName());
                 } catch (IOException e) {
-                    System.err.println("[SurvivalMod] Failed to move config file: " + path);
-                    e.printStackTrace();
+                    System.err.println("[SurvivalMod] Failed to move config file: " + path.getFileName() + " - " + e.getMessage());
                 }
             });
         }
-
-        moveSpecialFolder(versionFolder, "Playerdata");
-        moveSpecialFolder(versionFolder, "recipe");
-
-        System.out.println("[DEBUG] Moving configs to versioned folder: " + versionFolder.getName());
     }
 
-    private static void moveSpecialFolder(File versionFolder, String folderName) throws IOException {
-        File folder = new File(CONFIG_ROOT, folderName);
-        if (folder.exists()) {
-            Files.move(
-                    folder.toPath(),
-                    versionFolder.toPath().resolve(folderName),
-                    StandardCopyOption.REPLACE_EXISTING
-            );
+    private static void moveSpecialFolderContents(File versionFolder, String folderName) throws IOException {
+        File sourceFolder = new File(CONFIG_ROOT, folderName);
+        File targetFolder = new File(versionFolder, folderName);
+
+        if (!sourceFolder.exists() || !sourceFolder.isDirectory()) {
+            return; // Nichts zu tun, wenn der Quellordner nicht existiert
         }
+
+        if (!targetFolder.exists()) {
+            targetFolder.mkdirs(); // Zielordner erstellen, falls nicht vorhanden
+        }
+
+        try (Stream<Path> stream = Files.list(sourceFolder.toPath())) {
+            for (Path sourcePath : stream.collect(Collectors.toList())) {
+                Path targetPath = targetFolder.toPath().resolve(sourcePath.getFileName());
+                Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+
+        // Alten, jetzt leeren Ordner löschen
+        Files.delete(sourceFolder.toPath());
+        System.out.println("[SurvivalMod] Successfully moved content of folder: " + folderName);
     }
 
     public static String getCurrentVersion() {
