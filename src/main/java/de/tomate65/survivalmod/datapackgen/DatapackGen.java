@@ -4,13 +4,16 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Set;
+
+import static de.tomate65.survivalmod.manager.RecipeHandler.recipeStates;
+
 
 public class DatapackGen {
     private static final String[] ICON_FILES = {"icon.png", "icon_1.png"};
 
     public static void registerRecipesToDatapack(File datapackFolder, Set<String> enabledRecipes, File recipeSourceDir) {
-        // Validate recipe source directory exists
         if (!recipeSourceDir.exists()) {
             System.err.println("[SurvivalMod] Recipe source directory does not exist: " + recipeSourceDir.getAbsolutePath());
             return;
@@ -37,7 +40,22 @@ public class DatapackGen {
             copyModIcon(datapackFolder);
 
             // Copy enabled recipes
-            int copiedCount = copyEnabledRecipes(enabledRecipes, recipeSourceDir, recipesDir);
+            int copiedCount = 0;
+            for (Map.Entry<String, Boolean> entry : recipeStates.entrySet()) {
+                if (entry.getValue()) { // Prüfe, ob der Wert 'true' ist
+                    String recipeFileName = entry.getKey() + ".json";
+                    File source = new File(recipeSourceDir, recipeFileName);
+                    if (!source.exists()) {
+                        System.err.println("[SurvivalMod] Recipe file not found: " + source.getAbsolutePath());
+                        continue;
+                    }
+
+                    File target = new File(recipesDir, recipeFileName);
+                    copyEnabledRecipes(enabledRecipes, recipeSourceDir, recipesDir);
+                    Files.copy(source.toPath(), target.toPath());
+                    copiedCount++;
+                }
+            }
 
             System.out.println("[SurvivalMod] Successfully loaded " + copiedCount + " recipes into datapack at: " + datapackFolder.getAbsolutePath());
         } catch (IOException e) {

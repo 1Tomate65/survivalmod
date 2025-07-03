@@ -9,6 +9,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -64,6 +65,7 @@ public class RecipeCommand {
     }
 
     private static int toggleRecipe(CommandContext<ServerCommandSource> context, boolean enable) {
+        // Diese Methode funktioniert ohne Änderung.
         String recipe = StringArgumentType.getString(context, "recipe");
         boolean success = RecipeHandler.toggleRecipe(recipe, enable);
 
@@ -75,24 +77,27 @@ public class RecipeCommand {
             ), true);
             return 1;
         } else {
-            context.getSource().sendError(Text.literal("Recipe file not found: " + recipe));
+            context.getSource().sendError(Text.literal("Recipe not found in config: " + recipe));
             return 0;
         }
     }
 
     private static int listRecipes(CommandContext<ServerCommandSource> context) {
+        // Diese Methode muss angepasst werden, um den neuen Status zu lesen.
         List<String> recipes = RecipeHandler.getAllRecipeFiles();
         if (recipes.isEmpty()) {
             context.getSource().sendFeedback(() -> Text.literal("No custom recipes found."), false);
         } else {
             context.getSource().sendFeedback(() -> Text.literal("Available recipes:"), false);
+            Collections.sort(recipes); // Sortiere die Liste für eine saubere Ausgabe.
             for (String recipe : recipes) {
+                // Lese den Status aus der neuen Methode.
                 boolean enabled = RecipeHandler.isRecipeEnabled(recipe);
                 context.getSource().sendFeedback(() -> Text.literal(
                         String.format("- %s (%s)", recipe, enabled ? "enabled" : "disabled")
                 ), false);
             }
         }
-        return ((List<?>) recipes).size();
+        return recipes.size();
     }
 }

@@ -6,6 +6,7 @@ import de.tomate65.survivalmod.commands.SurvivalCommand;
 import de.tomate65.survivalmod.commands.ToggleCommand;
 import de.tomate65.survivalmod.config.ConfigGenerator;
 import de.tomate65.survivalmod.config.ConfigReader;
+import de.tomate65.survivalmod.datapackgen.DatapackGen;
 import de.tomate65.survivalmod.manager.ConfigBackupManager;
 import de.tomate65.survivalmod.manager.MagnetManager;
 import de.tomate65.survivalmod.manager.RecipeHandler;
@@ -25,7 +26,10 @@ import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Survivalmod implements ModInitializer {
 	public static final String MOD_ID = "survivalmod";
@@ -49,10 +53,19 @@ public class Survivalmod implements ModInitializer {
 			}
 		}
 
-		// 3. Jetzt Configs und Rezepte erzeugen
 		ConfigGenerator.generateConfigs();
 		ConfigReader.loadConfig();
 		RecipeHandler.initialize();
+
+		File datapackFolder = new File("world/datapacks/runtime_recipes");
+		Set<String> enabledRecipes = new HashSet<>();
+		RecipeHandler.getRecipeStates().forEach((recipe, enabled) -> {
+			if (enabled) {
+				enabledRecipes.add(recipe + ".json");
+			}
+		});
+
+		DatapackGen.registerRecipesToDatapack(datapackFolder, enabledRecipes, RecipeHandler.RECIPE_DIR);
 
 		SurvivalCommand.register();
 		ToggleCommand.register();
@@ -115,6 +128,24 @@ public class Survivalmod implements ModInitializer {
 			ToggleRenderer.clearCache(player.getUuid());
 			if (ToggleRenderer.hasActiveToggle(player)) {
 				ToggleRenderer.renderForPlayer(player);
+			}
+		});
+
+		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+			if (success) {
+				// 1. Commands neu registrieren
+				CommandDispatcher<ServerCommandSource> dispatcher = server.getCommandManager().getDispatcher();
+				RecipeCommand.register(dispatcher);
+
+				RecipeHandler.getRecipeStates().forEach((recipe, enabled) -> {
+					if (enabled) enabledRecipes.add(recipe + ".json");
+				});
+				DatapackGen.registerRecipesToDatapack(datapackFolder, enabledRecipes, RecipeHandler.RECIPE_DIR);
+
+				// 3. Logging
+				LOGGER.info("Datapack and commands successfully reloaded");
+			} else {
+				LOGGER.error("Datapack reload failed - recipes not updated");
 			}
 		});
 
