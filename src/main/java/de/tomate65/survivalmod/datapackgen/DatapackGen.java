@@ -3,12 +3,9 @@ package de.tomate65.survivalmod.datapackgen;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption; // <-- DIESEN IMPORT HINZUFÜGEN
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Set;
-
-import static de.tomate65.survivalmod.manager.RecipeHandler.recipeStates;
-
 
 public class DatapackGen {
     private static final String[] ICON_FILES = {"icon.png", "icon_1.png"};
@@ -25,37 +22,17 @@ public class DatapackGen {
         try {
             System.out.println("[SurvivalMod] Generating datapack with " + enabledRecipes.size() + " enabled recipes...");
 
-            // Clean old recipes and icon files
             cleanOldFiles(datapackFolder, recipesDir);
 
-            // Create necessary directories
             if (!recipesDir.exists() && !recipesDir.mkdirs()) {
                 throw new IOException("Failed to create recipe directory: " + recipesDir.getAbsolutePath());
             }
 
-            // Write pack.mcmeta
             writePackMeta(metaFile);
 
-            // Copy mod icon with rare chance for alternate icon
             copyModIcon(datapackFolder);
 
-            // Copy enabled recipes
-            int copiedCount = 0;
-            for (Map.Entry<String, Boolean> entry : recipeStates.entrySet()) {
-                if (entry.getValue()) { // Prüfe, ob der Wert 'true' ist
-                    String recipeFileName = entry.getKey() + ".json";
-                    File source = new File(recipeSourceDir, recipeFileName);
-                    if (!source.exists()) {
-                        System.err.println("[SurvivalMod] Recipe file not found: " + source.getAbsolutePath());
-                        continue;
-                    }
-
-                    File target = new File(recipesDir, recipeFileName);
-                    copyEnabledRecipes(enabledRecipes, recipeSourceDir, recipesDir);
-                    Files.copy(source.toPath(), target.toPath());
-                    copiedCount++;
-                }
-            }
+            int copiedCount = copyEnabledRecipes(enabledRecipes, recipeSourceDir, recipesDir);
 
             System.out.println("[SurvivalMod] Successfully loaded " + copiedCount + " recipes into datapack at: " + datapackFolder.getAbsolutePath());
         } catch (IOException e) {
@@ -68,13 +45,13 @@ public class DatapackGen {
         // Clean old recipes
         if (recipesDir.exists()) {
             System.out.println("[SurvivalMod] Cleaning old recipes from datapack...");
-            Files.walk(recipesDir.toPath())
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
+            if (datapackFolder.exists()) {
+                Files.walk(datapackFolder.toPath())
+                        .sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            }
         }
-
-        // Clean old icon files
         for (String icon : ICON_FILES) {
             File iconFile = new File(datapackFolder, icon);
             if (iconFile.exists()) {
@@ -84,11 +61,9 @@ public class DatapackGen {
     }
 
     private static void writePackMeta(File metaFile) throws IOException {
-        if (!metaFile.exists()) {
-            System.out.println("[SurvivalMod] Creating pack.mcmeta file...");
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(metaFile))) {
-                writer.write("{\"pack\":{\"pack_format\":26,\"description\":\"SurvivalMod Runtime Recipes\"}}");
-            }
+        System.out.println("[SurvivalMod] Creating pack.mcmeta file...");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(metaFile))) {
+            writer.write("{\"pack\":{\"pack_format\":26,\"description\":\"SurvivalMod Runtime Recipes\"}}");
         }
     }
 
@@ -104,7 +79,7 @@ public class DatapackGen {
             try (InputStream iconStream = DatapackGen.class.getResourceAsStream(iconPath)) {
                 if (iconStream != null) {
                     System.out.println("[SurvivalMod] Copying mod icon: " + iconName);
-                    Files.copy(iconStream, iconFile.toPath());
+                    Files.copy(iconStream, iconFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 } else {
                     System.out.println("[SurvivalMod] Could not find mod icon at: " + iconPath);
                 }
@@ -130,7 +105,8 @@ public class DatapackGen {
             }
 
             System.out.println("[SurvivalMod] Copying recipe: " + recipeId);
-            Files.copy(source.toPath(), target.toPath());
+            // Hinzufügen von StandardCopyOption.REPLACE_EXISTING
+            Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             copiedCount++;
         }
         return copiedCount;

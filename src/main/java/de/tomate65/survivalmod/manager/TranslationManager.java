@@ -23,6 +23,12 @@ public class TranslationManager {
         generators.add(new ZhCnTranslationGenerator());
         generators.add(new TrTrTranslationGenerator());
         generators.add(new ItItTranslationGenerator());
+        generators.add(new JaJpTranslationGenerator());
+        //generators.add(new ArSaTranslationGenerator());
+        generators.add(new PlPlTranslationGenerator());
+        generators.add(new KoKrTranslationGenerator());
+        generators.add(new DeChTranslationGenerator());
+        generators.add(new DeAtTranslationGenerator());
     }
 
     public static void generateAllTranslations(File langDir) {

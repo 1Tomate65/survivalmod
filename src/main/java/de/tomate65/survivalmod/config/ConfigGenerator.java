@@ -89,56 +89,57 @@ public class ConfigGenerator {
                     " ",
                     "Feel free to suggest improvements"));
             survival.add("changelog", createStringArray(
-                    "§7§l§nChangelog §8- §60.3.0 The Structure and balancing Update",
+                    "§7§l§nChangelog §8- §60.3.0 The Structure and Balancing Update",
                     "",
-                    "§l§6§nAdditions & Removals",
-                    "§7- §2Added Swiss German as a Translation",
-                    "§7- §2Reworked Config System",
-                    "§7- §2Added Loottables - a complete list on Modrinth",
-                    "§7- §2Redesigned most Structures",
-                    "§7- §2Removed redundant recipes",
-                    "§7- §2Added Tall Dry Grass Recipe",
-                    "§7- §2Balanced nether_shelter_1 to no longer spawn a ``Netherite Axt`` containing Looting 3 as an Enchantment",
-                    "§7- §2Balanced Loottable for most Structures",
+                    // --- Additions & Changes ---
+                    "§l§6§nAdditions & Changes",
+
+                    "§7- §2Reworked the config system.",
+                    "§7- §2Added loot tables - a complete list is available on Modrinth.",
+                    "§7- §2Redesigned most structures.",
+                    "§7- §2Removed redundant recipes.",
+                    "§7- §2Added Tall Dry Grass recipe.",
+                    "§7- §2Balanced 'nether_shelter_1' to no longer spawn a 'Netherite Axe' with the 'Looting III' enchantment.",
+                    "§7- §2Balanced loot tables for most structures.",
+                    "§7- §2Added 5 new languages.",
+                    //"§7- §2Added 1 experimental language (due to complex sentence structure differences).",
                     "",
+
+                    // --- Bug Fixes ---
                     "§l§6§nBug Fixes",
-                    "§7- §2Fixed a bug, there in certain languages some translations completely went missing",
-                    "§7- §2Fixed a bug, there the nether shelters spawned on the nether roof",
-                    "§7- §2Fixed a bug, there identical structures spawned right next to each other",
-                    "§7- §2Fixed a bugs, As they came and couldn't be noticed",
+                    "§7- §2Fixed a bug where in certain languages some translations went completely missing.",
+                    "§7- §2Fixed a bug where nether shelters spawned on the Nether roof.",
+                    "§7- §2Fixed a bug where identical structures spawned right next to each other.",
+                    "§7- §2Fixed various unnoticed bugs.",
                     "",
+
+                    // --- Thanks ---
                     "§l§6§nThanks",
-                    "§9A thank you, to Desonetos for translating the language",
-                    "§9A thank you, to This_Pluto for Hearing me out and suggesting and testing unofficial versions",
-                    "§9A thank you, to TheCityCrafter, EinFynn, wchtig_, Fortex and Connplay for reading the Modrinth Description and giveing me feedback",
-                    "even thou I ask you nicely"
+                    "§9A big thank you to This_Pluto for hearing me out and suggesting and testing unofficial versions.",
+                    "§9A big thank you to TheCityCrafter, EinFynn, wchtig_, Fortex, and Connplay for reading the Modrinth description and providing feedback,",
+                    "§keven though I asked them nicely."
             ));
             commands.add("survival", survival);
             defaultConfig.add("commands", commands);
 
-            // 2. Lade die bestehende Nutzer-Konfiguration, falls vorhanden
             if (SURVIVAL_CONFIG.exists()) {
                 try (FileReader reader = new FileReader(SURVIVAL_CONFIG)) {
                     JsonObject userConfig = JsonParser.parseReader(reader).getAsJsonObject();
 
-                    // 3. Führe die Konfigurationen zusammen
                     if (userConfig.has("commands") && userConfig.get("commands").isJsonObject()) {
                         JsonObject userSurvival = userConfig.getAsJsonObject("commands").getAsJsonObject("survival");
                         JsonObject defaultSurvival = survival; // Die Vorlage von oben
 
-                        // Gehe die Standard-Schlüssel durch und füge sie nur hinzu, wenn sie beim Nutzer fehlen
                         for (String key : defaultSurvival.keySet()) {
                             if (!userSurvival.has(key)) {
                                 userSurvival.add(key, defaultSurvival.get(key));
                             }
                         }
                     }
-                    // Nutze die aktualisierte Nutzer-Konfiguration zum Speichern
                     defaultConfig = userConfig;
                 }
             }
 
-            // 4. Schreibe die finale (neue oder zusammengeführte) Konfiguration in die Datei
             try (FileWriter writer = new FileWriter(SURVIVAL_CONFIG)) {
                 GSON.toJson(defaultConfig, writer);
             }
