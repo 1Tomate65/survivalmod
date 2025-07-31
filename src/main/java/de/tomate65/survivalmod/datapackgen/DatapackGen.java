@@ -3,7 +3,7 @@ package de.tomate65.survivalmod.datapackgen;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption; // <-- DIESEN IMPORT HINZUFÜGEN
+import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
 import java.util.Set;
 
@@ -105,7 +105,6 @@ public class DatapackGen {
             }
 
             System.out.println("[SurvivalMod] Copying recipe: " + recipeId);
-            // Hinzufügen von StandardCopyOption.REPLACE_EXISTING
             Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
             copiedCount++;
         }

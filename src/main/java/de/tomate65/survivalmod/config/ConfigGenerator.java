@@ -19,7 +19,7 @@ public class ConfigGenerator {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static final String[] VERSIONS = {
-            "0.3.0"
+            "0.2.5-S1", "0.3.0"
     };
 
     public static void generateConfigs() {
@@ -77,9 +77,13 @@ public class ConfigGenerator {
             JsonObject commands = new JsonObject();
             JsonObject survival = new JsonObject();
 
-            survival.add("rules", createStringArray("No griefing", "Be respectful", "Do not cheat"));
+            survival.add("rules", createStringArray("",
+                    "No griefing",
+                    "Be respectful",
+                    "Do not cheat" ));
+
             survival.add("info", createStringArray("",
-                    "This mod adds: structures, recipes and two commands",
+                    "This mod adds: structures, recipes and three commands",
                     " ",
                     "Originally created for a private server",
                     " ",
@@ -88,10 +92,9 @@ public class ConfigGenerator {
                     "§cPlease Report any translation error on the Issue page on github",
                     " ",
                     "Feel free to suggest improvements"));
-            survival.add("changelog", createStringArray(
+            /*survival.add("changelog", createStringArray(
                     "§7§l§nChangelog §8- §60.3.0 The Structure and Balancing Update",
                     "",
-                    // --- Additions & Changes ---
                     "§l§6§nAdditions & Changes",
 
                     "§7- §2Reworked the config system.",
@@ -104,21 +107,17 @@ public class ConfigGenerator {
                     "§7- §2Added 5 new languages.",
                     //"§7- §2Added 1 experimental language (due to complex sentence structure differences).",
                     "",
-
-                    // --- Bug Fixes ---
                     "§l§6§nBug Fixes",
                     "§7- §2Fixed a bug where in certain languages some translations went completely missing.",
                     "§7- §2Fixed a bug where nether shelters spawned on the Nether roof.",
                     "§7- §2Fixed a bug where identical structures spawned right next to each other.",
                     "§7- §2Fixed various unnoticed bugs.",
                     "",
-
-                    // --- Thanks ---
                     "§l§6§nThanks",
                     "§9A big thank you to This_Pluto for hearing me out and suggesting and testing unofficial versions.",
                     "§9A big thank you to TheCityCrafter, EinFynn, wchtig_, Fortex, and Connplay for reading the Modrinth description and providing feedback,",
                     "§keven though I asked them nicely."
-            ));
+            ))*/;
             commands.add("survival", survival);
             defaultConfig.add("commands", commands);
 
@@ -128,7 +127,7 @@ public class ConfigGenerator {
 
                     if (userConfig.has("commands") && userConfig.get("commands").isJsonObject()) {
                         JsonObject userSurvival = userConfig.getAsJsonObject("commands").getAsJsonObject("survival");
-                        JsonObject defaultSurvival = survival; // Die Vorlage von oben
+                        JsonObject defaultSurvival = survival;
 
                         for (String key : defaultSurvival.keySet()) {
                             if (!userSurvival.has(key)) {
@@ -151,7 +150,6 @@ public class ConfigGenerator {
 
     public static void generateToggleConfig() {
         try {
-            // 1. Immer eine Standard-Vorlage im Speicher erstellen
             JsonObject defaultConfig = new JsonObject();
             JsonArray defaultToggles = new JsonArray();
             defaultToggles.add("stone");
@@ -160,16 +158,12 @@ public class ConfigGenerator {
             defaultToggles.add("timeplayed");
             defaultConfig.add("toggles", defaultToggles);
 
-            // 2. Lade die bestehende Konfigurationsdatei, falls sie existiert
             if (TOGGLE_CONFIG.exists()) {
                 try (FileReader reader = new FileReader(TOGGLE_CONFIG)) {
-                    // Wenn die Datei existiert, lade sie und nutze sie als Basis
-                    // (In diesem Fall wollen wir die Liste des Nutzers komplett übernehmen)
                     defaultConfig = JsonParser.parseReader(reader).getAsJsonObject();
                 }
             }
 
-            // 3. Schreibe die (entweder neue oder vom Nutzer geladene) Konfiguration zurück
             try (FileWriter writer = new FileWriter(TOGGLE_CONFIG)) {
                 writer.write(GSON.toJson(defaultConfig));
             }
@@ -180,13 +174,14 @@ public class ConfigGenerator {
 
     private static void generateConfConfig() {
         try {
-            // 1. Erstelle immer eine Vorlage mit den neuesten Standardwerten im Speicher
             JsonObject defaultConfig = new JsonObject();
             defaultConfig.addProperty("ModVersion", ModVersion);
             defaultConfig.addProperty("ChatMsgFrequency", 10);
             defaultConfig.addProperty("Toggle Command", true);
             defaultConfig.addProperty("Default Statistik Category", "mined");
+            defaultConfig.addProperty("/", "Valid stats: mined, crafted, used, broken, picked_up, dropped");
             defaultConfig.addProperty("InvertToggleFile", false);
+            defaultConfig.addProperty("//", "InvertToggleFile: true makes toggle.json a blocklist instead of allowlist");
 
             JsonObject magnetSettings = new JsonObject();
             magnetSettings.addProperty("enabled", false);
@@ -194,39 +189,29 @@ public class ConfigGenerator {
             magnetSettings.addProperty("radius", 5);
             defaultConfig.add("magnet", magnetSettings);
 
-            // Der neue Block, der hinzugefügt werden soll!
             JsonObject backupSettings = new JsonObject();
-            backupSettings.addProperty("enabled", true); // Standardwerte hier definieren
+            backupSettings.addProperty("enabled", true);
             backupSettings.addProperty("maxBackups", 5);
             backupSettings.addProperty("minBackupIntervalHours", 24);
             backupSettings.addProperty("backupOnVersionChange", true);
             defaultConfig.add("backup", backupSettings);
 
             JsonObject config = defaultConfig;
-            // Color settings
             defaultConfig.addProperty("default_text_color", "GRAY");
             defaultConfig.addProperty("default_category_color", "GRAY");
             defaultConfig.addProperty("default_material_color", "GRAY");
             defaultConfig.addProperty("default_number_color", "GOLD");
             defaultConfig.addProperty("default_time_color", "AQUA");
 
-// Kommentare
-            defaultConfig.addProperty("#1", "Valid stats: mined, crafted, used, broken, picked_up, dropped");
-            defaultConfig.addProperty("#2", "InvertToggleFile: true makes toggle.json a blocklist instead of allowlist");
-
-
-            // 2. Lade die bestehende Konfigurationsdatei, falls sie existiert
             JsonObject existingConfig = new JsonObject();
             if (CONF_CONFIG.exists()) {
                 try (FileReader reader = new FileReader(CONF_CONFIG)) {
                     existingConfig = JsonParser.parseReader(reader).getAsJsonObject();
                 }
             }
-            // 3. Verschmelze die bestehende Konfiguration mit der neuen Vorlage
             mergeJsonObjects(defaultConfig, existingConfig);
-            defaultConfig.addProperty("ModVersion", ModVersion); // Sicherstellen, dass die Version immer aktuell ist
+            defaultConfig.addProperty("ModVersion", ModVersion);
 
-            // 4. Schreibe die vollständige, aktualisierte Konfiguration zurück in die Datei
             try (FileWriter writer = new FileWriter(CONF_CONFIG)) {
                 GSON.toJson(defaultConfig, writer);
             }

@@ -34,15 +34,14 @@ import java.util.Set;
 public class Survivalmod implements ModInitializer {
 	public static final String MOD_ID = "survivalmod";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	public static final String ModVersion = "0.3.0";
+	public static final String ModVersion = "0.2.5-S1";
 
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Survival Mod started to initialize!");
 
-		ConfigBackupManager.getInstance().checkAndUpdateConfigs(); // << sofort aufrufen
+		ConfigBackupManager.getInstance().checkAndUpdateConfigs();
 
-		// 2. Migration
 		String oldVersion = ConfigReader.getModVersion();
 		if (!oldVersion.equals(ModVersion)) {
 			try {
@@ -133,7 +132,6 @@ public class Survivalmod implements ModInitializer {
 
 		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
 			if (success) {
-				// 1. Commands neu registrieren
 				CommandDispatcher<ServerCommandSource> dispatcher = server.getCommandManager().getDispatcher();
 				RecipeCommand.register(dispatcher);
 
@@ -142,7 +140,6 @@ public class Survivalmod implements ModInitializer {
 				});
 				DatapackGen.registerRecipesToDatapack(datapackFolder, enabledRecipes, RecipeHandler.RECIPE_DIR);
 
-				// 3. Logging
 				LOGGER.info("Datapack and commands successfully reloaded");
 			} else {
 				LOGGER.error("Datapack reload failed - recipes not updated");
