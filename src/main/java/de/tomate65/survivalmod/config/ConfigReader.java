@@ -155,4 +155,19 @@ public class ConfigReader {
             return true;
         }
     }
+
+    public static boolean isLootTableEnabled(String lootTableId) {
+        File loottableFile = new File("config/survival/" + ModVersion + "/loottable_toggles.json");
+        if (!loottableFile.exists()) return true;
+
+        try (FileReader reader = new FileReader(loottableFile)) {
+            JsonObject config = JsonParser.parseReader(reader).getAsJsonObject();
+            if (config.has(lootTableId)) return config.get(lootTableId).getAsBoolean();
+            if (config.has("all_loottables")) return config.get("all_loottables").getAsBoolean();
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error reading loottable config: " + e.getMessage());
+            return true;
+        }
+    }
 }

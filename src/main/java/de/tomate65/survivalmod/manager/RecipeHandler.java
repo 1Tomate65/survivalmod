@@ -1,7 +1,7 @@
 package de.tomate65.survivalmod.manager;
 
 import com.google.gson.*;
-import de.tomate65.survivalmod.datapackgen.DatapackGen;
+import de.tomate65.survivalmod.config.datapack.datapackgen.DatapackGen;
 
 import java.io.*;
 import java.util.*;
@@ -121,7 +121,7 @@ public class RecipeHandler {
         saveToggles();
 
         // Aktualisiere den Datapack
-        File datapackFolder = new File("world/datapacks/runtime_recipes");
+        File datapackFolder = new File("world/datapacks/survivalmod_datapack");
         Set<String> enabledRecipes = new HashSet<>();
         recipeStates.forEach((recipe, enabled) -> {
             if (enabled) {

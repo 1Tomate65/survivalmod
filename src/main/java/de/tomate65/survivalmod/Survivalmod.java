@@ -6,7 +6,7 @@ import de.tomate65.survivalmod.commands.SurvivalCommand;
 import de.tomate65.survivalmod.commands.ToggleCommand;
 import de.tomate65.survivalmod.config.ConfigGenerator;
 import de.tomate65.survivalmod.config.ConfigReader;
-import de.tomate65.survivalmod.datapackgen.DatapackGen;
+import de.tomate65.survivalmod.config.datapack.datapackgen.DatapackGen;
 import de.tomate65.survivalmod.manager.ConfigBackupManager;
 import de.tomate65.survivalmod.manager.MagnetManager;
 import de.tomate65.survivalmod.manager.RecipeHandler;

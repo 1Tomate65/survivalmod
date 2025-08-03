@@ -3,7 +3,7 @@ package de.tomate65.survivalmod.config;
 import com.google.gson.*;
 import de.tomate65.survivalmod.manager.TranslationManager;
 import de.tomate65.survivalmod.manager.UpdateHelper;
-import de.tomate65.survivalmod.recipes.RecipeGenerator;
+import de.tomate65.survivalmod.config.datapack.recipes.RecipeGenerator;
 
 import java.io.*;
 import java.util.List;
