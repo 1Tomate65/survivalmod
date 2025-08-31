@@ -155,6 +155,9 @@ public class ConfigGenerator {
             defaultToggles.add("stone");
             defaultToggles.add("dirt");
             defaultToggles.add("oak_log");
+            defaultToggles.add("zombie");
+            defaultToggles.add("skeleton");
+            defaultToggles.add("cow");
             defaultToggles.add("timeplayed");
             defaultConfig.add("toggles", defaultToggles);
 
