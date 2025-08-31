@@ -24,6 +24,7 @@ public class ConfigReader {
     private static String defaultMaterialColor = "GRAY";
     private static String defaultNumberColor = "GOLD";
     private static String defaultTimeColor = "AQUA";
+    private static Boolean devmode = false;
     public static final Map<String, Map<String, String>> translations = new HashMap<>();
 
     public static void loadConfig() {
@@ -55,6 +56,8 @@ public class ConfigReader {
             defaultMaterialColor = config.get("default_material_color").getAsString();
             defaultNumberColor = config.get("default_number_color").getAsString();
             defaultTimeColor = config.get("default_time_color").getAsString();
+
+            devmode = config.get("DevMode").getAsBoolean();
 
             // Magnet settings
             JsonObject magnetSettings = config.has("magnet")
@@ -124,6 +127,7 @@ public class ConfigReader {
     public static String getDefaultNumberColor() { return defaultNumberColor; }
     public static boolean isInvertedToggleMode() { return invertToggleFile; }
     public static String getDefaultTimeColor() { return defaultTimeColor; }
+    public static Boolean getDevMode() { return devmode; }
     public static Set<String> getAvailableLanguages() { return translations.keySet(); }
 
     public static boolean isLanguageEnabled(String langCode) {

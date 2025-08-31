@@ -206,6 +206,8 @@ public class ConfigGenerator {
             defaultConfig.addProperty("default_number_color", "GOLD");
             defaultConfig.addProperty("default_time_color", "AQUA");
 
+            //defaultConfig.addProperty("DevMode", "false");
+
             JsonObject existingConfig = new JsonObject();
             if (CONF_CONFIG.exists()) {
                 try (FileReader reader = new FileReader(CONF_CONFIG)) {
